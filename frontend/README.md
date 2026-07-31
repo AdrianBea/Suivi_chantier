@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Suivi Chantier — Frontend
 
-## Getting Started
+Interface Next.js (App Router, TypeScript, Tailwind) de l'app de suivi de chantier. Voir le [README racine](../README.md) pour la vue d'ensemble du projet (backend, base de données, LLM).
 
-First, run the development server:
+## Démarrage
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+UI sur `http://localhost:3000`. Le backend (`cd ../backend && dotnet run`) doit tourner sur `http://localhost:5000` (configurable via `NEXT_PUBLIC_API_URL`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/(app)/
+│   ├── devis/        # Liste, détail ([id]), import
+│   ├── factures/     # Liste, détail ([id] + comparaison), import
+│   ├── entreprises/  # Gestion des entreprises
+│   ├── import/       # Point d'entrée d'import unifié
+│   └── parametres/   # Modèle OpenRouter, clé API (lecture seule)
+├── components/        # PdfUploadForm, LignesTable, ComparaisonTable, StatusBadge, ...
+└── lib/
+    ├── api.ts        # Wrappers fetch typés pour l'API backend
+    ├── types.ts      # Miroirs TypeScript des DTOs C#
+    ├── csv.ts        # Export CSV
+    ├── format.ts     # Formatage dates/montants
+    └── status.ts     # Libellés/couleurs des statuts
+```
 
-## Learn More
+## Notes
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Ce projet utilise une version de Next.js avec des différences par rapport aux conventions habituelles — voir `AGENTS.md` avant de modifier le routing ou les conventions de fichiers.
