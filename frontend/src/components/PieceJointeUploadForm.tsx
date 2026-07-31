@@ -42,41 +42,44 @@ export function PieceJointeUploadForm({ onUpload }: Props) {
   return (
     <div>
       <div style={{ marginBottom: 10 }}>
-        <label htmlFor="piece-jointe-libelle" style={{ display: "block", fontSize: 10, color: "#666260", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Libellé (optionnel)</label>
+        <label htmlFor="piece-jointe-libelle" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Libellé (optionnel)</label>
         <input
           id="piece-jointe-libelle"
           value={libelle}
           onChange={(e) => setLibelle(e.target.value)}
           disabled={loading}
           placeholder="Ex. Virement du 12/03"
-          style={{ width: "100%", background: "#252525", border: "1px solid #333", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "#E8E5E2", fontFamily: "inherit" }}
+          className="nm-input"
+          style={{ width: "100%", padding: "9px 12px", fontSize: 13, fontFamily: "inherit" }}
         />
       </div>
       <div
         {...getRootProps()}
         style={{
-          border: `2px dashed ${isDragActive ? "#F97316" : "#333"}`,
-          borderRadius: 8,
+          border: `2px dashed ${isDragActive ? "var(--nm-accent)" : "var(--nm-border-strong)"}`,
+          borderRadius: "var(--nm-radius-md)",
           padding: 24,
           textAlign: "center",
           cursor: loading ? "not-allowed" : "pointer",
-          background: isDragActive ? "#2A1D0C" : "transparent",
+          background: isDragActive ? "var(--nm-accent-soft-bg)" : "var(--nm-base-sunken)",
+          boxShadow: isDragActive ? "none" : "var(--nm-shadow-pressed)",
           opacity: loading ? 0.5 : 1,
+          transition: "background-color 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out",
         }}
       >
         <input {...getInputProps()} />
         {loading ? (
-          <p style={{ color: "#888480", fontSize: 12 }}>Envoi en cours…</p>
+          <p style={{ color: "var(--nm-text-muted)", fontSize: 12 }}>Envoi en cours…</p>
         ) : isDragActive ? (
-          <p style={{ color: "#F97316", fontSize: 12 }}>Déposez le fichier ici</p>
+          <p style={{ color: "var(--nm-accent)", fontSize: 12 }}>Déposez le fichier ici</p>
         ) : (
           <div>
-            <p style={{ color: "#A09C98", fontSize: 12 }}>Déposer un fichier (PDF, JPG, PNG)</p>
-            <p style={{ fontSize: 11, color: "#666260", marginTop: 4 }}>Glissez-déposez ou cliquez pour sélectionner — 50 Mo max</p>
+            <p style={{ color: "var(--nm-text-muted)", fontSize: 12 }}>Déposer un fichier (PDF, JPG, PNG)</p>
+            <p style={{ fontSize: 11, color: "var(--nm-text-faint)", marginTop: 4 }}>Glissez-déposez ou cliquez pour sélectionner — 50 Mo max</p>
           </div>
         )}
       </div>
-      {error && <p style={{ marginTop: 8, fontSize: 12, color: "#F87171" }}>{error}</p>}
+      {error && <p style={{ marginTop: 8, fontSize: 12, color: "var(--nm-danger)" }}>{error}</p>}
     </div>
   );
 }

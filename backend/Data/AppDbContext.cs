@@ -30,7 +30,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<LlmExchange>()
             .Property(e => e.TypeDocument)
             .HasConversion<string>()
-            .HasMaxLength(20); // borné pour permettre l'index (longtext non indexable sur MySQL)
+            .HasMaxLength(20); // borné pour permettre l'index
 
         modelBuilder.Entity<LlmExchange>()
             .HasIndex(e => new { e.TypeDocument, e.DocumentId });
@@ -40,7 +40,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasIndex(e => e.Siret)
             .IsUnique();
 
-        // Longueur bornée pour permettre l'index unique sur MySQL (longtext non indexable)
+        // Longueur bornée pour permettre l'index unique
         modelBuilder.Entity<Devis>()
             .Property(d => d.NumeroDevis)
             .HasMaxLength(100);
@@ -57,13 +57,32 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Devis>()
             .HasIndex(d => new { d.EntrepriseId, d.NumeroDevis })
             .IsUnique()
-            .HasFilter("NumeroDevis IS NOT NULL");
+            .HasFilter("\"NumeroDevis\" IS NOT NULL");
 
         // Evite double import du même numéro de facture pour la même entreprise
         modelBuilder.Entity<Facture>()
             .HasIndex(f => new { f.EntrepriseId, f.NumeroFacture })
             .IsUnique()
-            .HasFilter("NumeroFacture IS NOT NULL");
+            .HasFilter("\"NumeroFacture\" IS NOT NULL");
+
+        // Précision explicite requise sur PostgreSQL (pas de défaut MySQL decimal(65,30) à hériter).
+        modelBuilder.Entity<Devis>().Property(d => d.TotalHt).HasPrecision(18, 2);
+        modelBuilder.Entity<Devis>().Property(d => d.TvaTaux).HasPrecision(18, 2);
+        modelBuilder.Entity<Devis>().Property(d => d.TvaMontant).HasPrecision(18, 2);
+        modelBuilder.Entity<Devis>().Property(d => d.TotalTtc).HasPrecision(18, 2);
+
+        modelBuilder.Entity<Facture>().Property(f => f.TotalHt).HasPrecision(18, 2);
+        modelBuilder.Entity<Facture>().Property(f => f.TvaTaux).HasPrecision(18, 2);
+        modelBuilder.Entity<Facture>().Property(f => f.TvaMontant).HasPrecision(18, 2);
+        modelBuilder.Entity<Facture>().Property(f => f.TotalTtc).HasPrecision(18, 2);
+
+        modelBuilder.Entity<LignePoste>().Property(l => l.Quantite).HasPrecision(18, 2);
+        modelBuilder.Entity<LignePoste>().Property(l => l.PrixUnitaire).HasPrecision(18, 2);
+        modelBuilder.Entity<LignePoste>().Property(l => l.TotalLigne).HasPrecision(18, 2);
+
+        modelBuilder.Entity<LigneFacture>().Property(l => l.Quantite).HasPrecision(18, 2);
+        modelBuilder.Entity<LigneFacture>().Property(l => l.PrixUnitaire).HasPrecision(18, 2);
+        modelBuilder.Entity<LigneFacture>().Property(l => l.TotalLigne).HasPrecision(18, 2);
 
         modelBuilder.Entity<Devis>()
             .HasOne(d => d.Entreprise)
@@ -101,7 +120,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(l => l.LignePosteId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Bornes raisonnables pour MySQL (pas d'index dessus, mais évite le longtext par défaut)
+        // Bornes raisonnables sur les champs texte (pas d'index dessus, mais évite le type texte illimité par défaut)
         modelBuilder.Entity<PieceJointe>()
             .Property(p => p.NomFichier)
             .HasMaxLength(255);

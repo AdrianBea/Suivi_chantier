@@ -23,14 +23,18 @@ export default function Nav() {
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
+            className="pressable"
             style={{
               padding: "6px 14px",
-              borderRadius: 6,
+              borderRadius: "var(--nm-radius-pill)",
               fontSize: 13,
               fontWeight: active ? 600 : 400,
-              color: active ? "#F0EDE8" : "#888480",
-              background: active ? "#2A2A2A" : "transparent",
+              color: active ? "var(--nm-accent)" : "var(--nm-text-muted)",
+              background: active ? "var(--nm-base)" : "transparent",
+              boxShadow: active ? "var(--nm-shadow-pressed-sm)" : "none",
               textDecoration: "none",
+              cursor: "pointer",
+              transition: "background-color 180ms ease-out, box-shadow 180ms ease-out, color 180ms ease-out",
             }}
           >
             {label}

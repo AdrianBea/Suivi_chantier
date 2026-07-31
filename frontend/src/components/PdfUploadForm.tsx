@@ -41,21 +41,24 @@ export function PdfUploadForm({ onUpload, label = "Déposer un fichier PDF" }: P
   return (
     <div>
       <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-        <span style={{ color: "#A09C98" }}>Traiter le document en :</span>
+        <span style={{ color: "var(--nm-text-muted)" }}>Traiter le document en :</span>
         {(["Image", "Texte"] as const).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => setMode(m)}
             disabled={loading}
+            className="pressable"
             style={{
               padding: "5px 12px",
-              borderRadius: 7,
-              border: `1px solid ${mode === m ? "#F97316" : "#333"}`,
-              background: mode === m ? "#2A1D0C" : "transparent",
-              color: mode === m ? "#F97316" : "#A09C98",
+              borderRadius: "var(--nm-radius-sm)",
+              border: "none",
+              background: mode === m ? "var(--nm-base)" : "transparent",
+              boxShadow: mode === m ? "var(--nm-shadow-pressed-sm)" : "none",
+              color: mode === m ? "var(--nm-accent)" : "var(--nm-text-muted)",
               cursor: loading ? "not-allowed" : "pointer",
               opacity: loading ? 0.5 : 1,
+              transition: "background-color 180ms ease-out, box-shadow 180ms ease-out",
             }}
           >
             {m}
@@ -65,28 +68,30 @@ export function PdfUploadForm({ onUpload, label = "Déposer un fichier PDF" }: P
       <div
         {...getRootProps()}
         style={{
-          border: `2px dashed ${isDragActive ? "#F97316" : "#333"}`,
-          borderRadius: 8,
+          border: `2px dashed ${isDragActive ? "var(--nm-accent)" : "var(--nm-border-strong)"}`,
+          borderRadius: "var(--nm-radius-md)",
           padding: 40,
           textAlign: "center",
           cursor: loading ? "not-allowed" : "pointer",
-          background: isDragActive ? "#2A1D0C" : "transparent",
+          background: isDragActive ? "var(--nm-accent-soft-bg)" : "var(--nm-base-sunken)",
+          boxShadow: isDragActive ? "none" : "var(--nm-shadow-pressed)",
           opacity: loading ? 0.5 : 1,
+          transition: "background-color 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out",
         }}
       >
         <input {...getInputProps()} />
         {loading ? (
-          <p style={{ color: "#888480" }}>Analyse en cours… (peut prendre quelques minutes)</p>
+          <p style={{ color: "var(--nm-text-muted)" }}>Analyse en cours… (peut prendre quelques minutes)</p>
         ) : isDragActive ? (
-          <p style={{ color: "#F97316" }}>Déposez le fichier ici</p>
+          <p style={{ color: "var(--nm-accent)" }}>Déposez le fichier ici</p>
         ) : (
           <div>
-            <p style={{ color: "#A09C98" }}>{label}</p>
-            <p style={{ fontSize: 13, color: "#666260", marginTop: 4 }}>Glissez-déposez ou cliquez pour sélectionner</p>
+            <p style={{ color: "var(--nm-text-muted)" }}>{label}</p>
+            <p style={{ fontSize: 13, color: "var(--nm-text-faint)", marginTop: 4 }}>Glissez-déposez ou cliquez pour sélectionner</p>
           </div>
         )}
       </div>
-      {error && <p style={{ marginTop: 8, fontSize: 13, color: "#F87171" }}>{error}</p>}
+      {error && <p style={{ marginTop: 8, fontSize: 13, color: "var(--nm-danger)" }}>{error}</p>}
     </div>
   );
 }

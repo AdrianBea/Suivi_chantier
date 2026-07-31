@@ -23,8 +23,8 @@ export default function DevisDetailPage() {
 
   return (
     <div style={{ fontFamily: "inherit" }}>
-      {loading && <div style={{ padding: 40, color: "#888480" }}>Chargement…</div>}
-      {error && <div style={{ padding: 40, color: "#F87171" }}>{error}</div>}
+      {loading && <div style={{ padding: 40, color: "var(--nm-text-muted)" }}>Chargement…</div>}
+      {error && <div style={{ padding: 40, color: "var(--nm-danger)" }}>{error}</div>}
 
       {devis && (
         <DevisModal

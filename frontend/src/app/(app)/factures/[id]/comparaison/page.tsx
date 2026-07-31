@@ -22,8 +22,8 @@ export default function ComparaisonPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <main className="max-w-6xl mx-auto px-4 py-10" style={{ color: "#666260" }}>Calcul des écarts…</main>;
-  if (error) return <main className="max-w-6xl mx-auto px-4 py-10" style={{ color: "#F87171" }}>{error}</main>;
+  if (loading) return <main className="max-w-6xl mx-auto px-4 py-10" style={{ color: "var(--nm-text-faint)" }}>Calcul des écarts…</main>;
+  if (error) return <main className="max-w-6xl mx-auto px-4 py-10" style={{ color: "var(--nm-danger)" }}>{error}</main>;
   if (!data) return null;
 
   const ecart = data.ecartTotalHt;
@@ -31,35 +31,35 @@ export default function ComparaisonPage() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
-      <Link href="/factures" style={{ fontSize: 13, color: "#666260" }}>← Retour aux factures</Link>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#F0EDE8", marginTop: 8, marginBottom: 8 }}>Comparaison devis / facture</h1>
-      <p style={{ color: "#888480", marginBottom: 32 }}>{data.entrepriseNom}</p>
+      <Link href="/factures" style={{ fontSize: 13, color: "var(--nm-text-faint)" }}>← Retour aux factures</Link>
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--nm-text-primary)", marginTop: 8, marginBottom: 8 }}>Comparaison devis / facture</h1>
+      <p style={{ color: "var(--nm-text-muted)", marginBottom: 32 }}>{data.entrepriseNom}</p>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div style={{ padding: 16, borderRadius: 8, border: "1px solid #2C2C2C", background: "#1E1E1E" }}>
-          <p style={{ fontSize: 12, color: "#666260", marginBottom: 4 }}>Total HT devis</p>
-          <p style={{ fontSize: 18, fontWeight: 700, color: "#E8E5E2" }}>{formatEur(data.totalHtDevis)}</p>
+        <div style={{ padding: 16, borderRadius: 8, border: "1px solid var(--nm-border)", background: "var(--nm-base)" }}>
+          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Total HT devis</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: "var(--nm-text-secondary)" }}>{formatEur(data.totalHtDevis)}</p>
         </div>
-        <div style={{ padding: 16, borderRadius: 8, border: "1px solid #2C2C2C", background: "#1E1E1E" }}>
-          <p style={{ fontSize: 12, color: "#666260", marginBottom: 4 }}>Total HT facture</p>
-          <p style={{ fontSize: 18, fontWeight: 700, color: "#E8E5E2" }}>{formatEur(data.totalHtFacture)}</p>
+        <div style={{ padding: 16, borderRadius: 8, border: "1px solid var(--nm-border)", background: "var(--nm-base)" }}>
+          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Total HT facture</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: "var(--nm-text-secondary)" }}>{formatEur(data.totalHtFacture)}</p>
         </div>
-        <div style={{ padding: 16, borderRadius: 8, border: `1px solid ${ecartSignificatif ? "#4A2323" : "#1E3820"}`, background: ecartSignificatif ? "#221212" : "#162216" }}>
-          <p style={{ fontSize: 12, color: "#666260", marginBottom: 4 }}>Écart total HT</p>
-          <p style={{ fontSize: 18, fontWeight: 700, color: ecartSignificatif ? "#F87171" : "#4ADE80" }}>
+        <div style={{ padding: 16, borderRadius: 8, border: `1px solid ${ecartSignificatif ? "var(--nm-danger-border)" : "var(--nm-success)"}`, background: ecartSignificatif ? "var(--nm-danger-bg)" : "var(--nm-success-bg)" }}>
+          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Écart total HT</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: ecartSignificatif ? "var(--nm-danger)" : "var(--nm-success)" }}>
             {ecart > 0 ? "+" : ""}{formatEur(ecart)}
           </p>
         </div>
       </div>
 
       {data.hasDiscrepancies && (
-        <div style={{ marginBottom: 24, padding: 12, background: "#2A1D0C", border: "1px solid #4A3410", borderRadius: 8, fontSize: 13, color: "#F0B860" }}>
+        <div style={{ marginBottom: 24, padding: 12, background: "var(--nm-accent-soft-bg)", border: "1px solid var(--nm-accent-soft-bg)", borderRadius: 8, fontSize: 13, color: "var(--nm-accent-soft-text)" }}>
           Des écarts ont été détectés. Les lignes surlignées en orange n&apos;ont pas de correspondance dans le devis.
         </div>
       )}
 
       {!data.hasDiscrepancies && (
-        <div style={{ marginBottom: 24, padding: 12, background: "#162216", border: "1px solid #1E3820", borderRadius: 8, fontSize: 13, color: "#4ADE80" }}>
+        <div style={{ marginBottom: 24, padding: 12, background: "var(--nm-success-bg)", border: "1px solid var(--nm-success)", borderRadius: 8, fontSize: 13, color: "var(--nm-success)" }}>
           Aucun écart significatif détecté entre le devis et la facture.
         </div>
       )}

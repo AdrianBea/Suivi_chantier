@@ -165,7 +165,7 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         var devis = await db.Devis.FindAsync(id);
         if (devis == null) return NotFound();
 
-        // suppression explicite : la contrainte ON DELETE CASCADE n'est pas fiable sur toutes les installations MySQL (ex. tables MyISAM)
+        // suppression explicite des lignes côté application, sans dépendre du cascade DB
         var lignes = db.LignesPoste.Where(l => l.DevisId == id);
         db.LignesPoste.RemoveRange(lignes);
 

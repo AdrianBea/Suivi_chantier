@@ -4,6 +4,7 @@ backend/obj/
 
 # Local secrets / overrides (contains API keys, DB password)
 backend/appsettings.Development.json
+backend/.env
 
 # Uploaded user documents (devis/factures PDFs)
 backend/uploads/

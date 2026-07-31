@@ -45,7 +45,7 @@ export default function EntreprisesPage() {
           title="Entreprises"
           subtitle={`${entreprises.length} entreprise${entreprises.length > 1 ? "s" : ""} recensée${entreprises.length > 1 ? "s" : ""}`}
           actions={
-            <button onClick={() => setSelected("new")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "#F97316", border: "none", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+            <button onClick={() => setSelected("new")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "var(--nm-accent)", border: "none", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
               Ajouter une entreprise
             </button>
@@ -68,13 +68,13 @@ export default function EntreprisesPage() {
           emptyLabel="Aucun résultat pour ce filtre"
           renderRow={(e) => (
             <>
-              <div style={{ padding: "13px 12px 13px 0", fontSize: 13, color: "#E8E5E2", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.nom}</div>
-              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 11, color: "#888480", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.siret ?? "—"}</div>
-              <div style={{ padding: "13px 12px", fontSize: 12, color: "#A09C98", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.contactNom ?? "—"}</div>
-              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 11, color: "#888480", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.contactTel ?? "—"}</div>
-              <div style={{ padding: "13px 12px", fontSize: 12, color: "#A09C98", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.contactEmail ?? "—"}</div>
+              <div style={{ padding: "13px 12px 13px 0", fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.nom}</div>
+              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.siret ?? "—"}</div>
+              <div style={{ padding: "13px 12px", fontSize: 12, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.contactNom ?? "—"}</div>
+              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.contactTel ?? "—"}</div>
+              <div style={{ padding: "13px 12px", fontSize: 12, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{e.contactEmail ?? "—"}</div>
               <div style={{ padding: "13px 12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#555250" strokeWidth="2" strokeLinecap="round"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="var(--nm-text-faint)" strokeWidth="2" strokeLinecap="round"/></svg>
               </div>
             </>
           )}

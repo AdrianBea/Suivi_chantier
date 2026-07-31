@@ -7,14 +7,16 @@ namespace backend.Services;
 
 public record LlmCallResult(string Content, int DureeMs, bool Succes, string? Erreur);
 
-public interface ILmStudioService
+public interface IOpenRouterService
 {
     Task<LlmCallResult> ExtractStructuredJsonAsync(List<string> imagePaths, string systemPrompt, string userPrompt);
     Task<LlmCallResult> ExtractStructuredJsonFromTextAsync(List<string> pageTexts, string systemPrompt, string userPrompt);
 }
 
-public class LmStudioService(IHttpClientFactory httpClientFactory, ISettingsStore settingsStore) : ILmStudioService
+public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsStore settingsStore) : IOpenRouterService
 {
+    internal const string BaseUrl = "https://openrouter.ai/api/v1";
+
     public async Task<LlmCallResult> ExtractStructuredJsonAsync(
         List<string> imagePaths,
         string systemPrompt,
@@ -51,9 +53,9 @@ public class LmStudioService(IHttpClientFactory httpClientFactory, ISettingsStor
     private async Task<LlmCallResult> SendAsync(string systemPrompt, object userContent)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        var settings = settingsStore.LmStudio;
-        var httpClient = httpClientFactory.CreateClient("lmstudio");
-        httpClient.BaseAddress = new Uri(settings.BaseUrl.TrimEnd('/') + '/');
+        var settings = settingsStore.OpenRouter;
+        var httpClient = httpClientFactory.CreateClient("openrouter");
+        httpClient.BaseAddress = new Uri(BaseUrl.TrimEnd('/') + '/');
         httpClient.Timeout = TimeSpan.FromMinutes(5);
         settings.ApplyAuth(httpClient);
 
@@ -81,7 +83,7 @@ public class LmStudioService(IHttpClientFactory httpClientFactory, ISettingsStor
                     $"HTTP {(int)response.StatusCode} : {errBody}");
             }
 
-            var result = await response.Content.ReadFromJsonAsync<LmStudioResponse>();
+            var result = await response.Content.ReadFromJsonAsync<OpenRouterResponse>();
             var contentText = result?.Choices?.FirstOrDefault()?.Message?.Content ?? string.Empty;
             return new LlmCallResult(contentText, (int)sw.ElapsedMilliseconds, true, null);
         }
@@ -92,7 +94,7 @@ public class LmStudioService(IHttpClientFactory httpClientFactory, ISettingsStor
     }
 }
 
-file class LmStudioResponse
+file class OpenRouterResponse
 {
     [JsonPropertyName("choices")]
     public List<Choice>? Choices { get; set; }

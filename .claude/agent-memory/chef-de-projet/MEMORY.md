@@ -1,0 +1,3 @@
+- [Stack PostgreSQL](project_stack_postgres.md) — PostgreSQL/Npgsql depuis le 2026-07-31, migré de MySQL, base repartie de zéro, HasPrecision(18,2) sur les montants
+- [Orchestration d'un changement de stack](feedback_orchestration_migration.md) — swap provider avant migrations, build cassé attendu en phase intermédiaire, vérifier les livrables soi-même
+- [LLM OpenRouter exclusif](project_llm_openrouter.md) — seul provider depuis le 2026-07-31, BaseUrl en dur, clé API masquée en GET et en .env uniquement

@@ -41,7 +41,7 @@ export function EntrepriseCombobox({
           const match = entreprises.find((entr) => entr.nom === value);
           onChange(match ? { entrepriseId: match.id, entrepriseNom: undefined } : { entrepriseId: undefined, entrepriseNom: value || undefined });
         }}
-        style={{ width: "100%", background: "#252525", border: "1px solid #333", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "#E8E5E2", fontFamily: "inherit" }}
+        style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}
       />
       <datalist id={listId}>
         {entreprises.map((e) => (

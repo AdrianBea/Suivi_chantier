@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Construction site monitoring app for a personal home build. Users import PDF quotes (devis) and invoices (factures), which are converted to images and analyzed by a local LLM (LM Studio) to extract structured data stored in MySQL. The app compares invoices against quotes to flag discrepancies.
+Construction site monitoring app for a personal home build. Users import PDF quotes (devis) and invoices (factures), which are converted to images and analyzed by an LLM via OpenRouter to extract structured data stored in PostgreSQL. The app compares invoices against quotes to flag discrepancies.
 
 ## Architecture
 
@@ -14,8 +14,8 @@ Suivi chantier/
 └── frontend/   # Next.js (TypeScript, App Router, Tailwind)
 ```
 
-**Database**: MySQL — connection string in `backend/appsettings.json`  
-**LLM**: LM Studio on `http://localhost:1234/v1` (OpenAI-compatible API, vision model required)
+**Database**: PostgreSQL — connection string in `backend/appsettings.json`  
+**LLM**: OpenRouter (`https://openrouter.ai/api/v1`, OpenAI-compatible API, vision-capable model required)
 
 ## Running the project
 
@@ -40,7 +40,7 @@ dotnet ef migrations add <MigrationName>
 dotnet ef database update
 ```
 
-Before running migrations, set the correct MySQL password in `appsettings.json` (`ConnectionStrings.Default`).
+Before running migrations, set the correct PostgreSQL password in `appsettings.json` (`ConnectionStrings.Default`).
 
 ## Backend structure
 
@@ -52,14 +52,14 @@ backend/
 ├── Models/                      # EF Core entities: Entreprise, Devis, LignePoste, Facture, LigneFacture
 ├── Services/
 │   ├── PdfImageService.cs       # PDF → PNG using PDFtoImage + SkiaSharp
-│   ├── LmStudioService.cs       # HTTP calls to LM Studio vision model
+│   ├── OpenRouterService.cs     # HTTP calls to OpenRouter vision model
 │   ├── ExtractionService.cs     # Orchestrates PDF→images→LLM→DB; handles devis and factures
 │   └── ComparaisonService.cs    # Levenshtein-based line matching + ecart computation
 ├── Data/AppDbContext.cs
 └── DTOs/                        # DevisDto, FactureDto, ComparaisonDto
 ```
 
-Key NuGet packages: `Pomelo.EntityFrameworkCore.MySql`, `PDFtoImage`, `SkiaSharp`.
+Key NuGet packages: `Npgsql.EntityFrameworkCore.PostgreSQL`, `PDFtoImage`, `SkiaSharp`.
 
 ## Frontend structure
 
@@ -78,10 +78,11 @@ frontend/src/
     └── types.ts         # TypeScript mirrors of C# DTOs
 ```
 
-## LM Studio configuration
+## OpenRouter configuration
 
-- Set `LmStudio.Model` in `appsettings.json` to the exact model name shown in LM Studio
-- The model **must support vision** (e.g. LLaVA, Qwen2-VL, Llama-3.2-Vision)
+- Set `OpenRouter.Model` in `appsettings.json` to the desired OpenRouter model slug
+- The API key lives ONLY in `.env` under `SUIVI_CHANTIER_OpenRouter__ApiKey` and is never committed
+- The model **must support vision** (e.g. Qwen2-VL, Llama-3.2-Vision, GPT-4o)
 - The extraction prompt is hardcoded in `ExtractionService.cs` — it instructs the LLM to return strict JSON with no markdown
 
 ## Key behaviors

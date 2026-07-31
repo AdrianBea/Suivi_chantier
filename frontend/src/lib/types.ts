@@ -220,25 +220,12 @@ export interface ComparaisonDto {
   lignes: LigneComparaisonDto[];
 }
 
-export interface LmStudioSettingsDto {
-  baseUrl: string;
+export interface OpenRouterSettingsDto {
   model: string;
   apiKey: string;
 }
 
-export interface DatabaseSettingsDto {
-  server: string;
-  database: string;
-  user: string;
-  password: string;
-}
-
-export interface FullSettingsDto {
-  lmStudio: LmStudioSettingsDto;
-  database: DatabaseSettingsDto;
-}
-
-export interface LmStudioModelsDto {
+export interface OpenRouterModelsDto {
   models: string[];
 }
 

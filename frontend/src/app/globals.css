@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #E8EDF3;
+  --foreground: #3D4852;
 }
 
 @theme inline {
@@ -12,86 +12,166 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@theme {
-  /* Surfaces */
-  --color-bg-canvas: #111111;
-  --color-bg-page: #1B1B1B;
-  --color-bg-panel: #1E1E1E;
-  --color-bg-raised: #222222;
-  --color-bg-hover: #242424;
-  --color-bg-subtle: #252525;
-  --color-bg-nav: #1A1A1A;
+/* ───────────────────────────────────────────────────────────────────────
+   Neumorphism design tokens — "Le Point Travaux"
+   Base: light monochrome blue-grey #E8EDF3, accent: BTP blue #2F6FED
+   Every color referenced from inline styles across the app maps to one of
+   these --nm-* custom properties so both themes stay centrally controlled.
+   ─────────────────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
 
-  /* Borders */
-  --color-border-default: #2C2C2C;
-  --color-border-strong: #303030;
-  --color-border-emphasis: #333333;
-  --color-border-loud: #383838;
+  /* base surface */
+  --nm-base: #E8EDF3;
+  --nm-base-raised: #EEF2F8;
+  --nm-base-sunken: #E2E7EF;
 
-  /* Text scale — corrected for AA contrast on panel/raised backgrounds */
-  --color-text-primary: #F0EDE8;
-  --color-text-secondary: #E8E5E2;
-  --color-text-tertiary: #C0BDB8;
-  --color-text-muted: #A09C98;
-  --color-text-faint: #7A756F;
-  --color-text-disabled: #5C5854;
+  /* text — all pass 4.5:1 on --nm-base */
+  --nm-text-primary: #2B333B;
+  --nm-text-secondary: #3D4852;
+  --nm-text-tertiary: #5B6672;
+  --nm-text-muted: #6B7280;
+  --nm-text-faint: #7C8793;
+  --nm-text-disabled: #9AA3AD;
+  --nm-text-on-accent: #FFFFFF;
 
-  /* Accent */
-  --color-accent: #F97316;
-  --color-accent-hover: #FB923C;
+  /* accent — professional BTP blue, AA on both base and white */
+  --nm-accent: #2F6FED;
+  --nm-accent-hover: #4C82F0;
+  --nm-accent-soft-bg: #DCE6FB;
+  --nm-accent-soft-text: #1E4FB8;
 
-  /* Semantic */
-  --color-success: #4ADE80;
-  --color-success-strong: #22C55E;
-  --color-warning: #FCD34D;
-  --color-warning-strong: #F59E0B;
-  --color-danger: #F87171;
-  --color-info: #60A5FA;
-  --color-neutral-accent: #C4B5FD;
+  /* borders (subtle, neumorphism relies on shadow not border) */
+  --nm-border: #D7DEE8;
+  --nm-border-strong: #C7D0DC;
 
-  /* Type scale */
-  --text-display: 1.75rem;
-  --text-xl: 1.375rem;
-  --text-lg: 1rem;
-  --text-base: 0.875rem;
-  --text-sm: 0.8125rem;
-  --text-xs: 0.75rem;
-  --text-2xs: 0.6875rem;
+  /* semantic */
+  --nm-success: #1E8E5A;
+  --nm-success-bg: #DCF3E7;
+  --nm-warning: #9A6B00;
+  --nm-warning-bg: #FBEDCB;
+  --nm-danger: #C23B3B;
+  --nm-danger-bg: #FBE1E1;
+  --nm-danger-border: #F1BEBE;
+  --nm-info: #2563C7;
+  --nm-info-bg: #DCE9FB;
 
-  /* Spacing scale */
-  --spacing-1: 4px;
-  --spacing-2: 8px;
-  --spacing-3: 12px;
-  --spacing-4: 16px;
-  --spacing-5: 20px;
-  --spacing-6: 24px;
-  --spacing-8: 32px;
-  --spacing-10: 40px;
-  --spacing-12: 48px;
+  /* neumorphic shadow pair */
+  --nm-shadow-light: rgba(255, 255, 255, 0.75);
+  --nm-shadow-dark: rgba(163, 177, 198, 0.55);
+  --nm-shadow-raised: -6px -6px 12px var(--nm-shadow-light), 6px 6px 12px var(--nm-shadow-dark);
+  --nm-shadow-raised-sm: -3px -3px 7px var(--nm-shadow-light), 3px 3px 7px var(--nm-shadow-dark);
+  --nm-shadow-pressed: inset -4px -4px 9px var(--nm-shadow-light), inset 4px 4px 9px var(--nm-shadow-dark);
+  --nm-shadow-pressed-sm: inset -2px -2px 5px var(--nm-shadow-light), inset 2px 2px 5px var(--nm-shadow-dark);
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --nm-radius-sm: 10px;
+  --nm-radius-md: 14px;
+  --nm-radius-lg: 16px;
+  --nm-radius-pill: 999px;
 
   --font-display: "Space Grotesk", var(--font-geist-sans), sans-serif;
   --font-code: "JetBrains Mono", var(--font-geist-mono), monospace;
 }
 
+.dark {
+  color-scheme: dark;
+  --background: #22262B;
+  --foreground: #DDE3EA;
+
+  --nm-base: #22262B;
+  --nm-base-raised: #262B31;
+  --nm-base-sunken: #1D2126;
+
+  --nm-text-primary: #F0F3F7;
+  --nm-text-secondary: #DDE3EA;
+  --nm-text-tertiary: #B7C0CA;
+  --nm-text-muted: #9AA5B1;
+  --nm-text-faint: #838E9A;
+  --nm-text-disabled: #666F79;
+  --nm-text-on-accent: #FFFFFF;
+
+  --nm-accent: #5B8FF7;
+  --nm-accent-hover: #79A3F9;
+  --nm-accent-soft-bg: #223252;
+  --nm-accent-soft-text: #9DBBF7;
+
+  --nm-border: #2E343B;
+  --nm-border-strong: #383F47;
+
+  --nm-success: #4ADE80;
+  --nm-success-bg: #16321F;
+  --nm-warning: #FCD34D;
+  --nm-warning-bg: #3A2F0E;
+  --nm-danger: #F87171;
+  --nm-danger-bg: #3A1E1E;
+  --nm-danger-border: #55292A;
+  --nm-info: #60A5FA;
+  --nm-info-bg: #16233A;
+
+  /* dark neumorphism: not a naive inversion — soft dual-tone greys keep the
+     "soft" concave/convex read without the muddy contrast a pure invert gives */
+  --nm-shadow-light: rgba(255, 255, 255, 0.045);
+  --nm-shadow-dark: rgba(0, 0, 0, 0.55);
+  --nm-shadow-raised: -6px -6px 12px var(--nm-shadow-light), 6px 6px 14px var(--nm-shadow-dark);
+  --nm-shadow-raised-sm: -3px -3px 7px var(--nm-shadow-light), 3px 3px 8px var(--nm-shadow-dark);
+  --nm-shadow-pressed: inset -4px -4px 9px var(--nm-shadow-light), inset 4px 4px 10px var(--nm-shadow-dark);
+  --nm-shadow-pressed-sm: inset -2px -2px 5px var(--nm-shadow-light), inset 2px 2px 6px var(--nm-shadow-dark);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not(.light) {
+    color-scheme: dark;
+    --background: #22262B;
+    --foreground: #DDE3EA;
+
+    --nm-base: #22262B;
+    --nm-base-raised: #262B31;
+    --nm-base-sunken: #1D2126;
+
+    --nm-text-primary: #F0F3F7;
+    --nm-text-secondary: #DDE3EA;
+    --nm-text-tertiary: #B7C0CA;
+    --nm-text-muted: #9AA5B1;
+    --nm-text-faint: #838E9A;
+    --nm-text-disabled: #666F79;
+    --nm-text-on-accent: #FFFFFF;
+
+    --nm-accent: #5B8FF7;
+    --nm-accent-hover: #79A3F9;
+    --nm-accent-soft-bg: #223252;
+    --nm-accent-soft-text: #9DBBF7;
+
+    --nm-border: #2E343B;
+    --nm-border-strong: #383F47;
+
+    --nm-success: #4ADE80;
+    --nm-success-bg: #16321F;
+    --nm-warning: #FCD34D;
+    --nm-warning-bg: #3A2F0E;
+    --nm-danger: #F87171;
+    --nm-danger-bg: #3A1E1E;
+    --nm-danger-border: #55292A;
+    --nm-info: #60A5FA;
+    --nm-info-bg: #16233A;
+
+    --nm-shadow-light: rgba(255, 255, 255, 0.045);
+    --nm-shadow-dark: rgba(0, 0, 0, 0.55);
+    --nm-shadow-raised: -6px -6px 12px var(--nm-shadow-light), 6px 6px 14px var(--nm-shadow-dark);
+    --nm-shadow-raised-sm: -3px -3px 7px var(--nm-shadow-light), 3px 3px 8px var(--nm-shadow-dark);
+    --nm-shadow-pressed: inset -4px -4px 9px var(--nm-shadow-light), inset 4px 4px 10px var(--nm-shadow-dark);
+    --nm-shadow-pressed-sm: inset -2px -2px 5px var(--nm-shadow-light), inset 2px 2px 6px var(--nm-shadow-dark);
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--nm-base);
+  color: var(--nm-text-secondary);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 200ms ease-out, color 200ms ease-out;
 }
 
 * {
-  scrollbar-color: #383838 #1E1E1E;
+  scrollbar-color: var(--nm-border-strong) var(--nm-base);
 }
 
 *::-webkit-scrollbar {
@@ -100,27 +180,172 @@ body {
 }
 
 *::-webkit-scrollbar-track {
-  background: #1E1E1E;
+  background: var(--nm-base);
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #383838;
+  background: var(--nm-border-strong);
   border-radius: 6px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  background: var(--nm-text-faint);
+}
+
+/* every clickable control gets a pointer cursor by default; components that set
+   cursor explicitly (loading/disabled states) keep taking precedence via inline style */
+button:not(:disabled),
+[role="button"],
+a,
+select,
+summary {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:not(:disabled) {
+  transition: transform 150ms ease-out;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.97);
+  transition-timing-function: ease-in;
+  transition-duration: 100ms;
 }
 
 :focus-visible {
-  outline: 2px solid #F97316;
+  outline: 2px solid var(--nm-accent);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.78);
+  background: rgba(20, 24, 30, 0.55);
 }
 
 dialog {
   margin: auto;
+}
+
+@keyframes nm-modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.nm-modal-pop {
+  animation: nm-modal-pop 220ms ease-out both;
+}
+
+.nm-modal-pop::backdrop {
+  animation: fadeIn 220ms ease-out both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ─── Neumorphic primitives ──────────────────────────────────────────── */
+
+.nm-surface {
+  background: var(--nm-base);
+}
+
+.nm-card {
+  background: var(--nm-base);
+  border-radius: var(--nm-radius-md);
+  box-shadow: var(--nm-shadow-raised);
+  border: 1px solid transparent;
+}
+
+.nm-inset {
+  background: var(--nm-base);
+  border-radius: var(--nm-radius-sm);
+  box-shadow: var(--nm-shadow-pressed-sm);
+}
+
+.nm-btn {
+  cursor: pointer;
+  border: none;
+  background: var(--nm-base);
+  color: var(--nm-text-secondary);
+  border-radius: var(--nm-radius-sm);
+  box-shadow: var(--nm-shadow-raised-sm);
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.nm-btn:hover {
+  box-shadow: var(--nm-shadow-raised);
+}
+
+.nm-btn:active,
+.nm-btn.nm-pressed {
+  box-shadow: var(--nm-shadow-pressed-sm);
+  transform: scale(0.97);
+  transition-timing-function: ease-in;
+  transition-duration: 100ms;
+}
+
+.nm-btn-primary {
+  background: var(--nm-accent);
+  color: var(--nm-text-on-accent);
+  box-shadow: -4px -4px 10px rgba(255, 255, 255, 0.12), 4px 4px 12px rgba(47, 111, 237, 0.35);
+}
+
+.nm-btn-primary:hover {
+  background: var(--nm-accent-hover);
+}
+
+.nm-btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.nm-input {
+  background: var(--nm-base);
+  border: none;
+  border-radius: var(--nm-radius-sm);
+  box-shadow: var(--nm-shadow-pressed-sm);
+  color: var(--nm-text-secondary);
+  transition: box-shadow 180ms ease-out;
+}
+
+.nm-input:focus-visible {
+  box-shadow: var(--nm-shadow-pressed-sm), 0 0 0 2px var(--nm-accent);
+  outline: none;
+}
+
+.pressable {
+  cursor: pointer;
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.pressable:active {
+  transform: scale(0.97);
+  transition-timing-function: ease-in;
+  transition-duration: 100ms;
+}
+
+/* respect reduced motion everywhere: kill transform/opacity transitions & parallax */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .parallax-layer {
+    transform: none !important;
+  }
 }

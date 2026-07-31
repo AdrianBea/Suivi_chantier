@@ -9,16 +9,16 @@ export function ListTable<T>({ columns, rows, rowKey, onRowClick, renderRow, emp
   const gridTemplateColumns = columns.map((c) => c.width).join(" ");
 
   return (
-    <div style={{ background: "#222", border: "1px solid #2C2C2C", borderRadius: 10, overflow: "hidden" }}>
+    <div className="nm-card" style={{ overflow: "hidden" }}>
       <div className="overflow-x-auto">
         <div style={{ minWidth: "fit-content" }}>
-          <div style={{ display: "grid", gridTemplateColumns, padding: "0 20px", borderBottom: "1px solid #2C2C2C", background: "#1E1E1E" }}>
+          <div style={{ display: "grid", gridTemplateColumns, padding: "0 20px", borderBottom: "1px solid var(--nm-border)", background: "var(--nm-base-sunken)" }}>
             {columns.map((c, i) => (
-              <div key={i} style={{ padding: "11px 12px", fontSize: 10, letterSpacing: "0.1em", color: "#555250", textTransform: "uppercase", fontFamily: "monospace", textAlign: c.align }}>{c.label}</div>
+              <div key={i} style={{ padding: "11px 12px", fontSize: 10, letterSpacing: "0.1em", color: "var(--nm-text-faint)", textTransform: "uppercase", fontFamily: "monospace", textAlign: c.align }}>{c.label}</div>
             ))}
           </div>
           {rows.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#555250", fontSize: 13 }}>{emptyLabel}</div>
+            <div style={{ padding: 40, textAlign: "center", color: "var(--nm-text-faint)", fontSize: 13 }}>{emptyLabel}</div>
           ) : rows.map((row) => (
             <div
               key={rowKey(row)}
@@ -31,8 +31,8 @@ export function ListTable<T>({ columns, rows, rowKey, onRowClick, renderRow, emp
                   onRowClick(row);
                 }
               }}
-              style={{ display: "grid", gridTemplateColumns, padding: "0 20px", borderBottom: "1px solid #242424", cursor: "pointer" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#272727")}
+              style={{ display: "grid", gridTemplateColumns, padding: "0 20px", borderBottom: "1px solid var(--nm-border)", cursor: "pointer", transition: "background-color 180ms ease-out" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--nm-base-sunken)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               {renderRow(row)}

@@ -19,7 +19,9 @@ export function Modal({
     const dialog = ref.current;
     if (!dialog) return;
     dialog.showModal();
-    return () => dialog.close();
+    // ne pas utiliser dialog.close() ici : il déclenche l'event "close" -> onClose(),
+    // ce qui referme immédiatement la modale au 2e passage de l'effet en StrictMode (dev)
+    return () => dialog.removeAttribute("open");
   }, []);
 
   return (
@@ -31,16 +33,17 @@ export function Modal({
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
+      className="nm-modal-pop"
       style={{
-        background: "#1E1E1E",
-        border: "1px solid #303030",
-        borderRadius: 12,
+        background: "var(--nm-base)",
+        border: "none",
+        borderRadius: "var(--nm-radius-lg)",
         width,
         maxWidth: "95vw",
         maxHeight: "88vh",
         padding: 0,
-        color: "#F0EDE8",
-        boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+        color: "var(--nm-text-primary)",
+        boxShadow: "-10px -10px 24px var(--nm-shadow-light), 14px 14px 32px var(--nm-shadow-dark), 0 24px 60px rgba(0,0,0,0.35)",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", maxHeight: "88vh", overflow: "hidden" }}>

@@ -1,4 +1,4 @@
-import { ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, FullSettingsDto, LignePosteUpsertDto, LlmExchangeDto, LmStudioModelsDto, PieceJointeDto, TestResultDto } from "./types";
+import { ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, LignePosteUpsertDto, LlmExchangeDto, OpenRouterModelsDto, OpenRouterSettingsDto, PieceJointeDto, TestResultDto } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5096";
 
@@ -144,17 +144,15 @@ export const api = {
     delete: (id: number) => request<void>(`/api/entreprises/${id}`, { method: "DELETE" }),
   },
   settings: {
-    get: () => request<FullSettingsDto>("/api/settings"),
-    update: (dto: FullSettingsDto) =>
+    get: () => request<OpenRouterSettingsDto>("/api/settings"),
+    update: (model: string) =>
       request<void>("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dto),
+        body: JSON.stringify({ model }),
       }),
-    getModels: (baseUrl?: string, apiKey?: string) =>
-      request<LmStudioModelsDto>(`/api/settings/models?baseUrl=${encodeURIComponent(baseUrl ?? "")}&apiKey=${encodeURIComponent(apiKey ?? "")}`),
+    getModels: () => request<OpenRouterModelsDto>("/api/settings/models", { method: "POST" }),
     test: () => request<TestResultDto>("/api/settings/test", { method: "POST" }),
-    testDb: () => request<TestResultDto>("/api/settings/test-db", { method: "POST" }),
     reset: () => request<void>("/api/settings/reset", { method: "POST" }),
   },
 };

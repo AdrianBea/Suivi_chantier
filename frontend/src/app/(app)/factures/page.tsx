@@ -94,15 +94,15 @@ export default function FacturesPage() {
           title="Factures"
           subtitle={`${factures.length} factures · ${formatEur(totalHT)} HT · ${formatEur(totalTTC)} TTC au total`}
           actions={<>
-            <button onClick={() => setCreating(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "transparent", border: "1px solid #383838", borderRadius: 8, color: "#E8E5E2", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="#E8E5E2" strokeWidth="2" strokeLinecap="round"/></svg>
+            <button onClick={() => setCreating(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "transparent", border: "1px solid var(--nm-border-strong)", borderRadius: 8, color: "var(--nm-text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="var(--nm-text-secondary)" strokeWidth="2" strokeLinecap="round"/></svg>
               Ajouter manuellement
             </button>
-            <button onClick={exportCsv} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "transparent", border: "1px solid #383838", borderRadius: 8, color: "#E8E5E2", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#E8E5E2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <button onClick={exportCsv} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "transparent", border: "1px solid var(--nm-border-strong)", borderRadius: 8, color: "var(--nm-text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="var(--nm-text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Exporter CSV
             </button>
-            <Link href="/import?type=FAC" style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "#F97316", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+            <Link href="/import?type=FAC" style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "var(--nm-accent)", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
               Importer une facture
             </Link>
@@ -113,11 +113,11 @@ export default function FacturesPage() {
         {loading ? <LoadState /> : <>
 
         <StatGrid stats={[
-          { label: "Total", value: String(factures.length), color: "#F0EDE8" },
-          { label: "Extraites", value: String(extraitCount), color: "#4ADE80" },
-          { label: "En attente", value: String(enAttenteCount), color: "#FCD34D" },
-          { label: "Montant HT", value: formatEur(totalHT), color: "#F97316", small: true },
-          { label: "Montant TTC", value: formatEur(totalTTC), color: "#F97316", small: true },
+          { label: "Total", value: String(factures.length), color: "var(--nm-text-primary)" },
+          { label: "Extraites", value: String(extraitCount), color: "var(--nm-success)" },
+          { label: "En attente", value: String(enAttenteCount), color: "var(--nm-warning)" },
+          { label: "Montant HT", value: formatEur(totalHT), color: "var(--nm-accent)", small: true },
+          { label: "Montant TTC", value: formatEur(totalTTC), color: "var(--nm-accent)", small: true },
         ]} />
 
         {/* filter bar */}
@@ -126,7 +126,7 @@ export default function FacturesPage() {
           {pills.map((p) => {
             const active = filterStatut === p.key;
             return (
-              <button key={p.key} onClick={() => setFilterStatut(p.key)} style={{ padding: "8px 16px", borderRadius: 7, border: `1px solid ${active ? (p.key === "Extrait" ? "#2C4A2C" : p.key === "EnAttente" ? "#4A3A0C" : "#444") : "#2C2C2C"}`, background: active ? (p.key === "Extrait" ? "#162216" : p.key === "EnAttente" ? "#231D0C" : "#2A2A2A") : "#1E1E1E", color: active ? (p.key === "Extrait" ? "#4ADE80" : p.key === "EnAttente" ? "#FCD34D" : "#F0EDE8") : "#888480", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+              <button key={p.key} onClick={() => setFilterStatut(p.key)} style={{ padding: "8px 16px", borderRadius: 7, border: `1px solid ${active ? (p.key === "Extrait" ? "var(--nm-success)" : p.key === "EnAttente" ? "var(--nm-accent-soft-bg)" : "var(--nm-text-disabled)") : "var(--nm-border)"}`, background: active ? (p.key === "Extrait" ? "var(--nm-success-bg)" : p.key === "EnAttente" ? "var(--nm-accent-soft-bg)" : "var(--nm-base-raised)") : "var(--nm-base)", color: active ? (p.key === "Extrait" ? "var(--nm-success)" : p.key === "EnAttente" ? "var(--nm-warning)" : "var(--nm-text-primary)") : "var(--nm-text-muted)", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
                 {p.label}
               </button>
             );
@@ -145,25 +145,25 @@ export default function FacturesPage() {
                 {f.typeLot ? (
                   <span style={{ padding: "3px 9px", borderRadius: 20, fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", fontFamily: "monospace", background: `${TYPE_LOT_COLORS[f.typeLot]}22`, color: TYPE_LOT_COLORS[f.typeLot], whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{TYPE_LOT_LABELS[f.typeLot]}</span>
                 ) : (
-                  <span style={{ fontSize: 12, color: "#444" }}>—</span>
+                  <span style={{ fontSize: 12, color: "var(--nm-text-disabled)" }}>—</span>
                 )}
               </div>
-              <div style={{ padding: "13px 12px 13px 0", fontFamily: "monospace", fontSize: 11, color: "#888480", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.numeroFacture ?? "—"}</div>
+              <div style={{ padding: "13px 12px 13px 0", fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.numeroFacture ?? "—"}</div>
               <div style={{ padding: "13px 12px", minWidth: 0 }}>
-                <div style={{ fontSize: 13, color: "#E8E5E2", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.entreprise?.nom ?? "—"}</div>
+                <div style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.entreprise?.nom ?? "—"}</div>
               </div>
               <div style={{ padding: "13px 12px", fontSize: 11, textAlign: "center", fontFamily: "monospace" }}>
-                {f.devisId ? <span style={{ color: "#FB923C" }}>#{f.devisId}</span> : <span style={{ color: "#444" }}>—</span>}
+                {f.devisId ? <span style={{ color: "var(--nm-accent-hover)" }}>#{f.devisId}</span> : <span style={{ color: "var(--nm-text-disabled)" }}>—</span>}
               </div>
-              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 11, color: "#888480", whiteSpace: "nowrap" }}>{formatDate(f.dateFacture)}</div>
-              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 13, color: "#C0BDB8", textAlign: "right", whiteSpace: "nowrap" }}>{formatEur(f.totalHt)}</div>
-              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 13, color: "#E8E5E2", fontWeight: 500, textAlign: "right", whiteSpace: "nowrap" }}>{formatEur(f.totalTtc)}</div>
+              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", whiteSpace: "nowrap" }}>{formatDate(f.dateFacture)}</div>
+              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 13, color: "var(--nm-text-tertiary)", textAlign: "right", whiteSpace: "nowrap" }}>{formatEur(f.totalHt)}</div>
+              <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, textAlign: "right", whiteSpace: "nowrap" }}>{formatEur(f.totalTtc)}</div>
               <div />
               <div style={{ padding: "13px 12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ padding: "3px 9px", borderRadius: 20, fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", fontFamily: "monospace", background: statutBg(f.statut), color: statutColor(f.statut), whiteSpace: "nowrap" }}>{statutLabel(f.statut)}</span>
               </div>
               <div style={{ padding: "13px 12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#555250" strokeWidth="2" strokeLinecap="round"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="var(--nm-text-faint)" strokeWidth="2" strokeLinecap="round"/></svg>
               </div>
             </>
           )}

@@ -136,7 +136,7 @@ public class ExtractionService(
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var pdfImageService = scope.ServiceProvider.GetRequiredService<IPdfImageService>();
-        var lmStudioService = scope.ServiceProvider.GetRequiredService<ILmStudioService>();
+        var openRouterService = scope.ServiceProvider.GetRequiredService<IOpenRouterService>();
 
         var devis = await db.Devis.FirstOrDefaultAsync(d => d.Id == devisId);
         if (devis == null) return;
@@ -179,13 +179,13 @@ public class ExtractionService(
                 {
                     var batch = imagePaths.Skip(i).Take(4).ToList();
                     nbPages = batch.Count;
-                    call = await lmStudioService.ExtractStructuredJsonAsync(batch, DevisSystemPrompt, userPrompt);
+                    call = await openRouterService.ExtractStructuredJsonAsync(batch, DevisSystemPrompt, userPrompt);
                 }
                 else
                 {
                     var batch = textPages.Skip(i).Take(4).ToList();
                     nbPages = batch.Count;
-                    call = await lmStudioService.ExtractStructuredJsonFromTextAsync(batch, DevisSystemPrompt, userPrompt);
+                    call = await openRouterService.ExtractStructuredJsonFromTextAsync(batch, DevisSystemPrompt, userPrompt);
                 }
                 rawResponses.Add(call.Content);
 
@@ -194,7 +194,7 @@ public class ExtractionService(
                     TypeDocument = TypeDocument.Devis,
                     DocumentId   = devis.Id,
                     Batch        = i / 4 + 1,
-                    Modele       = settingsStore.LmStudio.Model,
+                    Modele       = settingsStore.OpenRouter.Model,
                     SystemPrompt = DevisSystemPrompt,
                     UserPrompt   = userPrompt,
                     NbImages     = mode == ExtractionMode.Image ? nbPages : 0,
@@ -308,7 +308,7 @@ public class ExtractionService(
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var pdfImageService = scope.ServiceProvider.GetRequiredService<IPdfImageService>();
-        var lmStudioService = scope.ServiceProvider.GetRequiredService<ILmStudioService>();
+        var openRouterService = scope.ServiceProvider.GetRequiredService<IOpenRouterService>();
 
         var facture = await db.Factures.FirstOrDefaultAsync(f => f.Id == factureId);
         if (facture == null) return;
@@ -350,13 +350,13 @@ public class ExtractionService(
                 {
                     var batch = imagePaths.Skip(i).Take(4).ToList();
                     nbPages = batch.Count;
-                    call = await lmStudioService.ExtractStructuredJsonAsync(batch, FactureSystemPrompt, userPrompt);
+                    call = await openRouterService.ExtractStructuredJsonAsync(batch, FactureSystemPrompt, userPrompt);
                 }
                 else
                 {
                     var batch = textPages.Skip(i).Take(4).ToList();
                     nbPages = batch.Count;
-                    call = await lmStudioService.ExtractStructuredJsonFromTextAsync(batch, FactureSystemPrompt, userPrompt);
+                    call = await openRouterService.ExtractStructuredJsonFromTextAsync(batch, FactureSystemPrompt, userPrompt);
                 }
                 rawResponses.Add(call.Content);
 
@@ -365,7 +365,7 @@ public class ExtractionService(
                     TypeDocument = TypeDocument.Facture,
                     DocumentId   = facture.Id,
                     Batch        = i / 4 + 1,
-                    Modele       = settingsStore.LmStudio.Model,
+                    Modele       = settingsStore.OpenRouter.Model,
                     SystemPrompt = FactureSystemPrompt,
                     UserPrompt   = userPrompt,
                     NbImages     = mode == ExtractionMode.Image ? nbPages : 0,

@@ -1,9 +1,9 @@
 import { StatutExtraction } from "@/lib/types";
 
 export const STATUT_CONFIG: Record<StatutExtraction, { label: string; bg: string; color: string }> = {
-  Extrait: { label: "EXTRAIT", bg: "#162216", color: "#4ADE80" },
-  EnAttente: { label: "EN ATTENTE", bg: "#231D0C", color: "#FCD34D" },
-  Erreur: { label: "ERREUR", bg: "#221212", color: "#F87171" },
+  Extrait: { label: "EXTRAIT", bg: "var(--nm-success-bg)", color: "var(--nm-success)" },
+  EnAttente: { label: "EN ATTENTE", bg: "var(--nm-accent-soft-bg)", color: "var(--nm-warning)" },
+  Erreur: { label: "ERREUR", bg: "var(--nm-danger-bg)", color: "var(--nm-danger)" },
 };
 
 export function statutLabel(s: StatutExtraction) {
