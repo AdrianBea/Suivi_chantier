@@ -1,0 +1,2 @@
+- [Stack projet](project_stack.md) — Suivi chantier = MySQL/Pomelo, pas SQL Server ; longtext non indexable, HasMaxLength requis
+- [Migrations EF Core sur Windows avec backend.exe verrouillé](feedback_migrations_windows_lock.md) — procédure sans tuer le process utilisateur

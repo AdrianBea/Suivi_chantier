@@ -1,0 +1,2 @@
+- [Pièces jointes facture — contrat API et pattern de rafraîchissement](project_pieces_jointes.md) — FactureDto.piecesJointes vide sur list(), peuplé sur getById()
+- [Ne pas généraliser PdfUploadForm](feedback_upload_component_reuse.md) — un seul usage réel, préférer un composant dédié pour les uploads non-LLM

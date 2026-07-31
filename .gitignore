@@ -1,0 +1,22 @@
+# .NET build artifacts
+backend/bin/
+backend/obj/
+
+# Local secrets / overrides (contains API keys, DB password)
+backend/appsettings.Development.json
+
+# Uploaded user documents (devis/factures PDFs)
+backend/uploads/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:claude.ai)",
+      "PowerShell(ls \"C:\\\\Users\\\\Beaugelin\\\\Desktop\\\\Suivi chantier\\\\frontend\\\\src\\\\app\\\\\")",
+      "PowerShell(New-Item *)",
+      "PowerShell(ls \"C:\\\\Users\\\\Beaugelin\\\\Desktop\\\\Suivi chantier\\\\frontend\\\\src\\\\lib\\\\\")"
+    ]
+  }
+}

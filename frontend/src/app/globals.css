@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@theme {
+  /* Surfaces */
+  --color-bg-canvas: #111111;
+  --color-bg-page: #1B1B1B;
+  --color-bg-panel: #1E1E1E;
+  --color-bg-raised: #222222;
+  --color-bg-hover: #242424;
+  --color-bg-subtle: #252525;
+  --color-bg-nav: #1A1A1A;
+
+  /* Borders */
+  --color-border-default: #2C2C2C;
+  --color-border-strong: #303030;
+  --color-border-emphasis: #333333;
+  --color-border-loud: #383838;
+
+  /* Text scale — corrected for AA contrast on panel/raised backgrounds */
+  --color-text-primary: #F0EDE8;
+  --color-text-secondary: #E8E5E2;
+  --color-text-tertiary: #C0BDB8;
+  --color-text-muted: #A09C98;
+  --color-text-faint: #7A756F;
+  --color-text-disabled: #5C5854;
+
+  /* Accent */
+  --color-accent: #F97316;
+  --color-accent-hover: #FB923C;
+
+  /* Semantic */
+  --color-success: #4ADE80;
+  --color-success-strong: #22C55E;
+  --color-warning: #FCD34D;
+  --color-warning-strong: #F59E0B;
+  --color-danger: #F87171;
+  --color-info: #60A5FA;
+  --color-neutral-accent: #C4B5FD;
+
+  /* Type scale */
+  --text-display: 1.75rem;
+  --text-xl: 1.375rem;
+  --text-lg: 1rem;
+  --text-base: 0.875rem;
+  --text-sm: 0.8125rem;
+  --text-xs: 0.75rem;
+  --text-2xs: 0.6875rem;
+
+  /* Spacing scale */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-display: "Space Grotesk", var(--font-geist-sans), sans-serif;
+  --font-code: "JetBrains Mono", var(--font-geist-mono), monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  scrollbar-color: #383838 #1E1E1E;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #1E1E1E;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #383838;
+  border-radius: 6px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+:focus-visible {
+  outline: 2px solid #F97316;
+  outline-offset: 2px;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.78);
+}
+
+dialog {
+  margin: auto;
+}
