@@ -22,39 +22,6 @@ public class SettingsController(ISettingsStore settingsStore, IHttpClientFactory
     private static string Mask(string secret)
         => string.IsNullOrEmpty(secret) ? "" : new string('•', 8) + secret[^Math.Min(4, secret.Length)..];
 
-    // La clé API n'est plus modifiable depuis le front, uniquement via backend/.env : seul le modèle est éditable.
-    public record UpdateModelDto(string Model);
-
-    [HttpPut]
-    public ActionResult Put([FromBody] UpdateModelDto dto)
-    {
-        if (string.IsNullOrWhiteSpace(dto.Model))
-            return BadRequest("Model est requis.");
-
-        settingsStore.UpdateOpenRouter(dto.Model.Trim(), settingsStore.OpenRouter.ApiKey);
-
-        return NoContent();
-    }
-
-    [HttpPost("models")]
-    public async Task<ActionResult<OpenRouterModelsDto>> GetModels()
-    {
-        var client = httpClientFactory.CreateClient("openrouter");
-        settingsStore.OpenRouter.ApplyAuth(client);
-        try
-        {
-            var response = await client.GetAsync($"{OpenRouterService.BaseUrl}/models");
-            response.EnsureSuccessStatusCode();
-            var body = await response.Content.ReadFromJsonAsync<OpenRouterModelsResponse>();
-            var modelIds = body?.Data?.Select(m => m.Id).OrderBy(id => id, StringComparer.OrdinalIgnoreCase).ToList() ?? [];
-            return Ok(new OpenRouterModelsDto(modelIds));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(502, $"Impossible de joindre OpenRouter : {ex.Message}");
-        }
-    }
-
     [HttpPost("reset")]
     public async Task<ActionResult> Reset()
     {
@@ -86,26 +53,31 @@ public class SettingsController(ISettingsStore settingsStore, IHttpClientFactory
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await client.PostAsync(
                 $"{OpenRouterService.BaseUrl}/chat/completions", content);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                return Ok(new TestResultDto(false,
+                    $"HTTP {(int)response.StatusCode} {response.ReasonPhrase} — {Truncate(errorBody)}"));
+            }
             return Ok(new TestResultDto(true, "Connexion réussie."));
+        }
+        catch (TaskCanceledException)
+        {
+            return Ok(new TestResultDto(false, "Délai dépassé (30s) : OpenRouter n'a pas répondu à temps."));
+        }
+        catch (HttpRequestException ex)
+        {
+            return Ok(new TestResultDto(false, $"Erreur réseau : {ex.Message}"));
         }
         catch (Exception ex)
         {
-            return Ok(new TestResultDto(false, ex.Message));
+            return Ok(new TestResultDto(false, $"{ex.GetType().Name} : {ex.Message}"));
         }
     }
+
+    private static string Truncate(string s, int max = 500)
+        => string.IsNullOrEmpty(s) ? "(réponse vide)" : s.Length > max ? s[..max] + "…" : s;
 }
 
 public record OpenRouterSettingsDto(string Model, string ApiKey);
-public record OpenRouterModelsDto(List<string> Models);
 public record TestResultDto(bool Success, string Message);
-
-file class OpenRouterModelsResponse
-{
-    [JsonPropertyName("data")] public List<ModelEntry>? Data { get; set; }
-}
-
-file class ModelEntry
-{
-    [JsonPropertyName("id")] public string Id { get; set; } = "";
-}

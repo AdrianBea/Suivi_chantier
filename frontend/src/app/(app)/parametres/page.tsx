@@ -16,9 +16,7 @@ const CARD_TITLE: React.CSSProperties = { fontSize: 10, letterSpacing: "0.12em",
 const LABEL: React.CSSProperties = { fontSize: 11, color: "var(--nm-text-muted)", letterSpacing: "0.08em", textTransform: "uppercase" as const, fontFamily: "var(--font-jetbrains-mono)", marginBottom: LABEL_GAP, display: "block" };
 const FIELD: React.CSSProperties = { width: "100%", background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: FIELD_PAD, fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "var(--font-jetbrains-mono)" };
 const INPUT: React.CSSProperties = FIELD;
-const SELECT: React.CSSProperties = FIELD;
 const BTN: React.CSSProperties = { padding: "10px 24px", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "inherit" };
-const BTN_GHOST: React.CSSProperties = { ...BTN, padding: "9px 16px", background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", fontSize: 12, color: "var(--nm-text-secondary)", whiteSpace: "nowrap" as const };
 const RESULT_TEXT: React.CSSProperties = { fontSize: 12, fontFamily: "var(--font-jetbrains-mono)" };
 
 export default function ParametresPage() {
@@ -37,10 +35,6 @@ export default function ParametresPage() {
   const [resetResult, setResetResult] = useState<TestResultDto | null>(null);
 
   const [model, setModel] = useState("");
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [savingModel, setSavingModel] = useState(false);
-  const [modelSaveResult, setModelSaveResult] = useState<TestResultDto | null>(null);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<TestResultDto | null>(null);
 
@@ -62,26 +56,6 @@ export default function ParametresPage() {
       .catch((e) => setLoadError(e instanceof Error ? e.message : "Impossible de joindre le backend"))
       .finally(() => setLoading(false));
   }, []);
-
-  async function handleLoadModels() {
-    setLoadingModels(true); setModelSaveResult(null);
-    try {
-      const { models } = await api.settings.getModels();
-      setAvailableModels(models);
-    } catch (e) {
-      setModelSaveResult({ success: false, message: e instanceof Error ? e.message : "Erreur inconnue" });
-    } finally { setLoadingModels(false); }
-  }
-
-  async function handleSaveModel() {
-    setSavingModel(true); setModelSaveResult(null);
-    try {
-      await api.settings.update(model);
-      setModelSaveResult({ success: true, message: "Modèle enregistré." });
-    } catch (e) {
-      setModelSaveResult({ success: false, message: e instanceof Error ? e.message : "Erreur lors de l'enregistrement" });
-    } finally { setSavingModel(false); }
-  }
 
   async function handleTest() {
     setTesting(true); setTestResult(null);
@@ -188,35 +162,12 @@ export default function ParametresPage() {
             <div style={CARD_TITLE}>IA · OpenRouter</div>
 
             <div style={{ marginBottom: FIELD_GAP }}>
-              <label htmlFor="param-model" style={LABEL}>Modèle</label>
-              <div style={{ display: "flex", gap: 10 }}>
-                {availableModels.length > 0 ? (
-                  <select id="param-model" style={SELECT} value={model} onChange={(e) => setModel(e.target.value)}>
-                    {!availableModels.includes(model) && <option value={model}>{model}</option>}
-                    {availableModels.map((m) => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                ) : (
-                  <input id="param-model" style={INPUT} type="text" value={model} onChange={(e) => setModel(e.target.value)} />
-                )}
-                <button
-                  onClick={handleLoadModels}
-                  disabled={loadingModels}
-                  style={{ ...BTN_GHOST, cursor: loadingModels ? "not-allowed" : "pointer" }}
-                >
-                  {loadingModels ? "Chargement…" : "Lister les modèles"}
-                </button>
-              </div>
-              <p style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: LABEL_GAP }}>La clé API se configure dans <code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>backend/.env</code>.</p>
+              <label style={LABEL}>Modèle</label>
+              <div style={FIELD}>{model || "—"}</div>
+              <p style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: LABEL_GAP }}>Configuré dans <code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>backend/.env</code> (<code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>SUIVI_CHANTIER_OpenRouter__Model</code>).</p>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button
-                onClick={handleSaveModel}
-                disabled={savingModel}
-                style={{ ...BTN, background: savingModel ? "var(--nm-accent-hover)" : "var(--nm-accent)", border: "none", color: "var(--nm-text-on-accent)", cursor: savingModel ? "not-allowed" : "pointer" }}
-              >
-                {savingModel ? "Enregistrement…" : "Enregistrer le modèle"}
-              </button>
               <button
                 onClick={handleTest}
                 disabled={testing}
@@ -224,8 +175,7 @@ export default function ParametresPage() {
               >
                 {testing ? "Test…" : "Tester la connexion"}
               </button>
-              {modelSaveResult && <span style={{ ...RESULT_TEXT, color: modelSaveResult.success ? "var(--nm-success)" : "var(--nm-danger)" }}>{modelSaveResult.success ? "✓ " : "✗ "}{modelSaveResult.message}</span>}
-              {testResult && <span style={{ ...RESULT_TEXT, color: testResult.success ? "var(--nm-success)" : "var(--nm-danger)" }}>{testResult.success ? "✓ " : "✗ "}{testResult.message}</span>}
+              {testResult && <span style={{ ...RESULT_TEXT, color: testResult.success ? "var(--nm-success)" : "var(--nm-danger)", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{testResult.success ? "✓ " : "✗ "}{testResult.message}</span>}
             </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-import { ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, LignePosteUpsertDto, LlmExchangeDto, OpenRouterModelsDto, OpenRouterSettingsDto, PieceJointeDto, TestResultDto, UpdateProfileDto, UserDto } from "./types";
+import { ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, LignePosteUpsertDto, LlmExchangeDto, OpenRouterSettingsDto, PieceJointeDto, TestResultDto, UpdateProfileDto, UserDto } from "./types";
 
 // Same-origin: rewrites in next.config.ts proxy /api/* to the backend so the
 // ASP.NET auth cookie (scoped to this origin) travels with every request.
@@ -185,13 +185,6 @@ export const api = {
   },
   settings: {
     get: () => request<OpenRouterSettingsDto>("/api/settings"),
-    update: (model: string) =>
-      request<void>("/api/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model }),
-      }),
-    getModels: () => request<OpenRouterModelsDto>("/api/settings/models", { method: "POST" }),
     test: () => request<TestResultDto>("/api/settings/test", { method: "POST" }),
     reset: () => request<void>("/api/settings/reset", { method: "POST" }),
   },

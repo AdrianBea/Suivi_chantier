@@ -244,10 +244,6 @@ export interface OpenRouterSettingsDto {
   apiKey: string;
 }
 
-export interface OpenRouterModelsDto {
-  models: string[];
-}
-
 export interface TestResultDto {
   success: boolean;
   message: string;
