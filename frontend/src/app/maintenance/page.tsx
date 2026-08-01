@@ -40,8 +40,8 @@ export default function MaintenancePage() {
         Le site est en maintenance
       </h1>
       <p style={{ fontSize: 15, color: "var(--nm-text-muted)", maxWidth: 420, marginTop: 12, lineHeight: 1.6 }}>
-        Nous effectuons quelques travaux pour améliorer le suivi de chantier.
-        Le site sera de retour très bientôt — merci de votre patience.
+        Pas de pierres, pas de palais.
+        Pas de palais, pas de palais.
       </p>
 
       <div
