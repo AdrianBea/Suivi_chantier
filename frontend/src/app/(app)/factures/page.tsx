@@ -9,7 +9,6 @@ import { ListPageHeader, SearchInput, StatGrid } from "@/components/ListPageHead
 import { ListTable } from "@/components/ListTable";
 import { ErrorState, LoadState } from "@/components/LoadState";
 import { api } from "@/lib/api";
-import { downloadCsv, toCsv } from "@/lib/csv";
 import { formatDate, formatEur } from "@/lib/format";
 import { FactureDto, TYPE_LOT_COLORS, TYPE_LOT_LABELS } from "@/lib/types";
 
@@ -72,20 +71,6 @@ export default function FacturesPage() {
     { key: "EnAttente", label: "En attente" },
   ];
 
-  function exportCsv() {
-    const csv = toCsv(filtered, [
-      { header: "Type de lot", value: (f) => (f.typeLot ? TYPE_LOT_LABELS[f.typeLot] : "") },
-      { header: "N° Facture", value: (f) => f.numeroFacture },
-      { header: "Entreprise", value: (f) => f.entreprise?.nom },
-      { header: "Devis lié", value: (f) => f.devisId },
-      { header: "Date", value: (f) => f.dateFacture },
-      { header: "Montant HT", value: (f) => f.totalHt },
-      { header: "Montant TTC", value: (f) => f.totalTtc },
-      { header: "Statut", value: (f) => statutLabel(f.statut) },
-    ]);
-    downloadCsv(`factures-${new Date().toISOString().slice(0, 10)}.csv`, csv);
-  }
-
   return (
     <div style={{ fontFamily: "inherit" }}>
       <div style={{ padding: "32px 40px 56px" }}>
@@ -97,10 +82,6 @@ export default function FacturesPage() {
             <button onClick={() => setCreating(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "transparent", border: "1px solid var(--nm-border-strong)", borderRadius: 8, color: "var(--nm-text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="var(--nm-text-secondary)" strokeWidth="2" strokeLinecap="round"/></svg>
               Ajouter manuellement
-            </button>
-            <button onClick={exportCsv} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "transparent", border: "1px solid var(--nm-border-strong)", borderRadius: 8, color: "var(--nm-text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="var(--nm-text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Exporter CSV
             </button>
             <Link href="/import?type=FAC" style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "var(--nm-accent)", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>

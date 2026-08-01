@@ -35,7 +35,6 @@ src/
 └── lib/
     ├── api.ts       # Wrappers fetch typés (même origine, credentials: "include")
     ├── types.ts     # Miroirs TypeScript des DTOs C#
-    ├── csv.ts       # Export CSV
     ├── format.ts    # Formatage dates/montants
     ├── status.ts    # Libellés/couleurs des statuts
     └── useParallax.ts

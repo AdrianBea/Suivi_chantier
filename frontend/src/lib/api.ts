@@ -7,7 +7,12 @@ export const API_BASE = "";
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { ...init, credentials: "include" });
   if (res.status === 401 && typeof window !== "undefined") {
-    window.location.href = "/login";
+    // Le cookie peut être expiré côté serveur tout en restant présent (HttpOnly) côté navigateur :
+    // sans le SignOut, proxy.ts (hasSession = simple présence du cookie) renvoie /login -> / en boucle.
+    if (path !== "/api/auth/logout") {
+      await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
+    }
+    if (window.location.pathname !== "/login") window.location.href = "/login";
     throw new Error("Session expirée.");
   }
   if (!res.ok) {
