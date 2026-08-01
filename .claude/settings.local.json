@@ -4,7 +4,10 @@
       "WebFetch(domain:claude.ai)",
       "PowerShell(ls \"C:\\\\Users\\\\Beaugelin\\\\Desktop\\\\Suivi chantier\\\\frontend\\\\src\\\\app\\\\\")",
       "PowerShell(New-Item *)",
-      "PowerShell(ls \"C:\\\\Users\\\\Beaugelin\\\\Desktop\\\\Suivi chantier\\\\frontend\\\\src\\\\lib\\\\\")"
+      "PowerShell(ls \"C:\\\\Users\\\\Beaugelin\\\\Desktop\\\\Suivi chantier\\\\frontend\\\\src\\\\lib\\\\\")",
+      "PowerShell(npx eslint \"src/app/\\(app\\)/aide/page.tsx\" \"src/components/Nav.tsx\" 2>&1 | Select-Object -First 30)",
+      "PowerShell(npx next build 2>&1 | Select-Object -Last 40)",
+      "PowerShell($env:BACKEND_INTERNAL_URL = \"http://localhost:5000\"; npx next build 2>&1 | Select-Object -Last 45)"
     ]
   }
 }

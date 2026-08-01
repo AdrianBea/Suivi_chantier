@@ -13,7 +13,7 @@ namespace backend.Controllers;
 [ApiController]
 [Route("api/auth")]
 [AllowAnonymous]
-public class AuthController(AppDbContext db, IPasswordHasher<User> hasher) : ControllerBase
+public class AuthController(AppDbContext db, IPasswordHasher<User> hasher, ILogger<AuthController> logger) : ControllerBase
 {
     public record SignupDto(string Email, string Password, string PasswordConfirmation, DateOnly? DateDebutChantier, DateOnly? DateLivraisonPrevue);
     public record CredentialsDto(string Email, string Password);
@@ -55,12 +55,19 @@ public class AuthController(AppDbContext db, IPasswordHasher<User> hasher) : Con
         var email = dto.Email.Trim().ToLowerInvariant();
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user is null)
+        {
+            logger.LogWarning("Login échoué : email inconnu {Email}", email);
             return Unauthorized("Email ou mot de passe incorrect.");
+        }
 
         var result = hasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
         if (result == PasswordVerificationResult.Failed)
+        {
+            logger.LogWarning("Login échoué : mot de passe invalide pour {UserId}", user.Id);
             return Unauthorized("Email ou mot de passe incorrect.");
+        }
 
+        logger.LogInformation("Login réussi pour {UserId}", user.Id);
         await SignInAsync(user);
         return Ok(ToDto(user));
     }

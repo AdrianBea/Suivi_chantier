@@ -13,7 +13,7 @@ public interface IOpenRouterService
     Task<LlmCallResult> ExtractStructuredJsonFromTextAsync(List<string> pageTexts, string systemPrompt, string userPrompt);
 }
 
-public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsStore settingsStore) : IOpenRouterService
+public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsStore settingsStore, ILogger<OpenRouterService> logger) : IOpenRouterService
 {
     internal const string BaseUrl = "https://openrouter.ai/api/v1";
 
@@ -71,26 +71,57 @@ public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsSt
         };
 
         var json = JsonSerializer.Serialize(requestBody);
+        var userContentPreview = userContent is string s ? Truncate(s, 2000) : "[contenu multimodal (images)]";
+        logger.LogInformation(
+            "OpenRouter requête → url={Url} modèle={Model} apiKeyPresente={HasKey} tailleBody={BodyBytes}o systemPrompt={SystemPromptPreview} userContent={UserContentPreview}",
+            httpClient.BaseAddress + "chat/completions",
+            settings.Model,
+            !string.IsNullOrWhiteSpace(settings.ApiKey),
+            Encoding.UTF8.GetByteCount(json),
+            Truncate(systemPrompt, 500),
+            userContentPreview);
+
         try
         {
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await httpClient.PostAsync("chat/completions", content);
+            var headers = string.Join(", ", response.Headers
+                .Where(h => h.Key is "x-ratelimit-remaining" or "x-ratelimit-limit" or "retry-after")
+                .Select(h => $"{h.Key}={string.Join('/', h.Value)}"));
+
             if (!response.IsSuccessStatusCode)
             {
                 var errBody = await response.Content.ReadAsStringAsync();
+                logger.LogError(
+                    "OpenRouter réponse en erreur ← statut={StatusCode} après {DureeMs}ms headers=[{Headers}] body={Body}",
+                    (int)response.StatusCode, sw.ElapsedMilliseconds, headers, Truncate(errBody, 4000));
                 return new LlmCallResult("", (int)sw.ElapsedMilliseconds, false,
                     $"HTTP {(int)response.StatusCode} : {errBody}");
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OpenRouterResponse>();
+            var rawBody = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<OpenRouterResponse>(rawBody);
             var contentText = result?.Choices?.FirstOrDefault()?.Message?.Content ?? string.Empty;
+            logger.LogInformation(
+                "OpenRouter réponse ← statut={StatusCode} en {DureeMs}ms modèle={Model} headers=[{Headers}] tailleReponse={ContentLength}car contenu={ContentPreview}",
+                (int)response.StatusCode, sw.ElapsedMilliseconds, settings.Model, headers, contentText.Length, Truncate(contentText, 1000));
+
+            if (string.IsNullOrWhiteSpace(contentText))
+                logger.LogWarning("OpenRouter réponse 200 mais contenu vide, body brut={RawBody}", Truncate(rawBody, 2000));
+
             return new LlmCallResult(contentText, (int)sw.ElapsedMilliseconds, true, null);
         }
         catch (Exception ex)
         {
+            logger.LogError(ex,
+                "OpenRouter appel échoué après {DureeMs}ms, type={ExceptionType} url={Url} modèle={Model}",
+                sw.ElapsedMilliseconds, ex.GetType().Name, httpClient.BaseAddress + "chat/completions", settings.Model);
             return new LlmCallResult("", (int)sw.ElapsedMilliseconds, false, ex.Message);
         }
     }
+
+    private static string Truncate(string s, int max) =>
+        s.Length <= max ? s : s[..max] + $"...[tronqué, {s.Length}car au total]";
 }
 
 file class OpenRouterResponse

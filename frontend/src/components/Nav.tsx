@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/entreprises", label: "Entreprises" },
   { href: "/import", label: "Import" },
   { href: "/parametres", label: "Paramètres" },
+  { href: "/aide", label: "Aide" },
 ];
 
 export default function Nav() {

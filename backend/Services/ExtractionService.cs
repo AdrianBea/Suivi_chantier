@@ -170,6 +170,7 @@ public class ExtractionService(
 
             for (int i = 0; i < pageCount; i += 4)
             {
+                using var _ = logger.BeginScope("DevisId={DevisId} Batch={Batch}", devisId, i / 4 + 1);
                 var userPrompt = $"Extract all data from the following page(s) of a French construction quote (devis).";
                 LlmCallResult call;
                 int nbPages;
@@ -340,6 +341,7 @@ public class ExtractionService(
 
             for (int i = 0; i < pageCount; i += 4)
             {
+                using var _ = logger.BeginScope("FactureId={FactureId} Batch={Batch}", factureId, i / 4 + 1);
                 var userPrompt = $"Extract all data from the following page(s) of a French construction invoice (facture).";
                 LlmCallResult call;
                 int nbPages;
