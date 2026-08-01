@@ -75,7 +75,7 @@ export default function FacturesPage() {
 
   return (
     <div style={{ fontFamily: "inherit" }}>
-      <div style={{ padding: "32px 40px 56px" }}>
+      <div className="page-shell">
         <ListPageHeader
           eyebrow="Documents contractuels"
           title="Factures"

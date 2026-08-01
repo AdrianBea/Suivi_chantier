@@ -22,7 +22,8 @@ export default function UserMenu() {
   if (!user) return null;
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: "auto", flexShrink: 0 }}>
+    // en mobile, e-mail et déconnexion sont repris dans la feuille « Plus » de BottomNav
+    <div className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: "auto", flexShrink: 0 }}>
       <span style={{ fontSize: 13, color: "var(--nm-text-muted)" }}>{user.email}</span>
       <button
         type="button"

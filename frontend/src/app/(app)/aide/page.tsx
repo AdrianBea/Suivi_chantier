@@ -85,12 +85,12 @@ const FAQ = [
 
 export default function AidePage() {
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", padding: "36px 40px 72px" }}>
+    <div style={{ maxWidth: 860, margin: "0 auto", padding: "36px clamp(16px, 4vw, 40px) 72px" }}>
 
       {/* En-tête */}
       <header style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 10, letterSpacing: "0.18em", color: "var(--nm-accent)", textTransform: "uppercase", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 8 }}>Guide · Le Point Travaux</div>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.01em" }}>Aide et prise en main</h1>
+        <h1 style={{ fontSize: "clamp(20px, 5vw, 26px)", fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.01em" }}>Aide et prise en main</h1>
         <p style={{ ...P, marginTop: 8, maxWidth: 620 }}>
           Le Point Travaux centralise les devis et factures de votre chantier. Vous déposez vos PDF, l&apos;application en extrait
           automatiquement les montants et les lignes, puis compare ce qui est facturé à ce qui avait été devisé.
@@ -135,7 +135,7 @@ export default function AidePage() {
       {/* Repères de lecture du tableau de bord */}
       <section style={{ ...CARD, marginBottom: SECTION_GAP }}>
         <div style={CARD_TITLE}>Lire le tableau de bord</div>
-        <dl style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: "14px 20px", alignItems: "baseline" }}>
+        <dl className="stack-mobile" style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: "14px 20px", alignItems: "baseline" }}>
           <Def term="Budget prévu">Somme des montants TTC de tous vos devis. C&apos;est votre enveloppe contractuelle.</Def>
           <Def term="Engagé">Somme des montants TTC de toutes vos factures, et sa part du budget prévu.</Def>
           <Def term="Avancement global">La même proportion, en anneau. Attention : c&apos;est un avancement <em>financier</em>, pas un avancement de travaux.</Def>

@@ -106,7 +106,9 @@ frontend/src/
     ├── api.ts       # Wrappers fetch typés (même origine, credentials: include)
     ├── types.ts     # Miroirs TypeScript des DTOs C#
     ├── format.ts    # Formatage (dates, montants, ...)
-    └── status.ts    # Libellés/couleurs des statuts (EnAttente / Extrait / Erreur)
+    ├── status.ts    # Libellés/couleurs des statuts (EnAttente / Extrait / Erreur)
+    ├── useParallax.ts    # Hook d'effet parallax (dashboard)
+    └── useMediaQuery.ts  # Hook de breakpoint responsive
 ```
 
 ## Comportements clés

@@ -32,10 +32,10 @@ export default function ComparaisonPage() {
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
       <Link href="/factures" style={{ fontSize: 13, color: "var(--nm-text-faint)" }}>← Retour aux factures</Link>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--nm-text-primary)", marginTop: 8, marginBottom: 8 }}>Comparaison devis / facture</h1>
+      <h1 style={{ fontSize: "clamp(20px, 5vw, 24px)", fontWeight: 700, color: "var(--nm-text-primary)", marginTop: 8, marginBottom: 8 }}>Comparaison devis / facture</h1>
       <p style={{ color: "var(--nm-text-muted)", marginBottom: 32 }}>{data.entrepriseNom}</p>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div style={{ padding: 16, borderRadius: 8, border: "1px solid var(--nm-border)", background: "var(--nm-base)" }}>
           <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Total TTC devis</p>
           <p style={{ fontSize: 18, fontWeight: 700, color: "var(--nm-text-secondary)" }}>{formatEur(data.totalTtcDevis)}</p>

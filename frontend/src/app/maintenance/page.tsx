@@ -36,7 +36,7 @@ export default function MaintenancePage() {
       >
         Chantier en cours
       </div>
-      <h1 style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10, maxWidth: 480 }}>
+      <h1 style={{ fontSize: "clamp(22px, 6vw, 30px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10, maxWidth: 480 }}>
         Le site est en maintenance
       </h1>
       <p style={{ fontSize: 15, color: "var(--nm-text-muted)", maxWidth: 420, marginTop: 12, lineHeight: 1.6 }}>
@@ -80,7 +80,7 @@ export default function MaintenancePage() {
 
 function CraneIllustration() {
   return (
-    <svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ maxWidth: "100%", height: "auto" }}>
       {/* sol */}
       <line x1="10" y1="148" x2="210" y2="148" stroke="var(--nm-border)" strokeWidth="2" />
 

@@ -99,7 +99,7 @@ export default function ParametresPage() {
       <style>{`@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} } *{box-sizing:border-box}`}</style>
 
       {/* BODY */}
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "36px 40px 64px" }}>
+      <div className="page-shell-narrow" style={{ maxWidth: 760, margin: "0 auto" }}>
         <div style={{ marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.05s ease both" }}>
           <div style={{ fontSize: 10, letterSpacing: "0.18em", color: "var(--nm-accent)", textTransform: "uppercase", fontFamily: "var(--font-jetbrains-mono)", marginBottom: LABEL_GAP }}>Configuration · Le Point Travaux</div>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.01em" }}>Paramètres</h1>
@@ -110,7 +110,7 @@ export default function ParametresPage() {
         <div style={{ ...CARD, marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.15s ease both" }}>
           <div style={CARD_TITLE}>Profil</div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: FIELD_GAP, marginBottom: FIELD_GAP }}>
+          <div className="stack-mobile" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: FIELD_GAP, marginBottom: FIELD_GAP }}>
             <div>
               <label htmlFor="param-nom" style={LABEL}>Nom</label>
               <input id="param-nom" style={INPUT} type="text" value={nom} onChange={(e) => setNom(e.target.value)} />
@@ -131,7 +131,7 @@ export default function ParametresPage() {
         <div style={{ ...CARD, marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.2s ease both" }}>
           <div style={CARD_TITLE}>Dates du chantier</div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: FIELD_GAP }}>
+          <div className="stack-mobile" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: FIELD_GAP }}>
             <div>
               <label htmlFor="param-debut" style={LABEL}>Début chantier</label>
               <input id="param-debut" style={INPUT} type="date" value={dateDebutChantier} onChange={(e) => setDateDebutChantier(e.target.value)} />

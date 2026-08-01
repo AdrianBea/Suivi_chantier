@@ -12,8 +12,8 @@ export function ComparaisonTable({ lignes }: { lignes: LigneComparaisonDto[] }) 
   const tdRight: React.CSSProperties = { ...td, textAlign: "right" };
 
   return (
-    <div className="overflow-x-auto nm-card" style={{ borderRadius: "var(--nm-radius-md)" }}>
-      <table style={{ minWidth: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+    <div className="overflow-x-auto nm-card cmp-wrap" style={{ borderRadius: "var(--nm-radius-md)" }}>
+      <table className="cmp-table" style={{ minWidth: "100%", fontSize: 13, borderCollapse: "collapse" }}>
         <thead style={{ background: "var(--nm-base)" }}>
           <tr>
             <th style={th}>Description (facture)</th>
@@ -29,18 +29,18 @@ export function ComparaisonTable({ lignes }: { lignes: LigneComparaisonDto[] }) 
         <tbody>
           {lignes.map((l) => (
             <tr key={l.factureLigneId} style={{ borderTop: "1px solid var(--nm-base-sunken)", background: l.nonMatche ? "var(--nm-accent-soft-bg)" : undefined }}>
-              <td style={{ ...td, maxWidth: 320, color: "var(--nm-text-secondary)" }}>{l.descriptionFacture}</td>
-              <td style={{ ...td, maxWidth: 320 }}>
+              <td data-label="Description (facture)" style={{ ...td, maxWidth: 320, color: "var(--nm-text-secondary)" }}>{l.descriptionFacture}</td>
+              <td data-label="Description (devis)" style={{ ...td, maxWidth: 320 }}>
                 {l.nonMatche ? <span style={{ color: "var(--nm-accent-soft-text)", fontWeight: 500 }}>Non trouvé dans le devis</span> : l.descriptionDevis}
               </td>
-              <td style={tdRight}>{l.quantiteDevis?.toLocaleString("fr-FR") ?? "—"}</td>
-              <td style={tdRight}>{l.quantiteFacture?.toLocaleString("fr-FR") ?? "—"}</td>
-              <td style={tdRight}>{formatEur(l.prixUnitaireDevis)}</td>
-              <td style={tdRight}>{formatEur(l.prixUnitaireFacture)}</td>
-              <td style={{ ...tdRight, fontWeight: 500, color: ecartColor(l.ecartPrix) }}>
+              <td data-label="Qté devis" style={tdRight}>{l.quantiteDevis?.toLocaleString("fr-FR") ?? "—"}</td>
+              <td data-label="Qté facture" style={tdRight}>{l.quantiteFacture?.toLocaleString("fr-FR") ?? "—"}</td>
+              <td data-label="PU devis" style={tdRight}>{formatEur(l.prixUnitaireDevis)}</td>
+              <td data-label="PU facture" style={tdRight}>{formatEur(l.prixUnitaireFacture)}</td>
+              <td data-label="Écart prix" style={{ ...tdRight, fontWeight: 500, color: ecartColor(l.ecartPrix) }}>
                 {l.ecartPrix != null ? formatEur(l.ecartPrix) : "—"}
               </td>
-              <td style={{ ...tdRight, fontWeight: 500, color: ecartColor(l.ecartQuantite) }}>
+              <td data-label="Écart qté" style={{ ...tdRight, fontWeight: 500, color: ecartColor(l.ecartQuantite) }}>
                 {l.ecartQuantite != null ? l.ecartQuantite.toLocaleString("fr-FR") : "—"}
               </td>
             </tr>

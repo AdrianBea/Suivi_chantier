@@ -16,7 +16,7 @@ const ITEMS = [
 export default function Nav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Principal" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+    <nav aria-label="Principal" className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: 4 }}>
       {ITEMS.map(({ href, label }) => {
         const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (

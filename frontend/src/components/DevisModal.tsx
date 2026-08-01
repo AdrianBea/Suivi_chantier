@@ -9,6 +9,7 @@ import { statutBg, statutColor, statutLabel } from "@/lib/status";
 import { DevisDto, EntrepriseDto, LignePosteDto, TYPE_LOT_LABELS, TYPE_LOT_VALUES, TypeLot } from "@/lib/types";
 import { EchangesLlm } from "@/components/EchangesLlm";
 import { EntrepriseCombobox } from "@/components/EntrepriseCombobox";
+import { useIsMobile } from "@/lib/useMediaQuery";
 
 export { statutLabel, statutBg, statutColor };
 
@@ -35,6 +36,10 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
   const [pdfWide, setPdfWide] = useState(false);
   const [showEchanges, setShowEchanges] = useState(false);
   const loadEchanges = useCallback(() => api.devis.echanges(devis.id), [devis.id]);
+  const isMobile = useIsMobile();
+  // en mobile le split horizontal ne tient pas : les 3 vues deviennent des onglets
+  const [tab, setTab] = useState<"details" | "pdf" | "echanges">("details");
+  const showPdfPane = !isMobile && showPdf && devis.hasPdf;
 
   useEffect(() => {
     if (editMode) api.entreprises.list().then(setEntreprises).catch(() => {});
@@ -144,23 +149,23 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
 
   return (
     <>
-      <Modal onClose={onClose} width={showPdf ? (pdfWide ? 2400 : 1420) : 900} height={840} titleId="devis-modal-title">
+      <Modal onClose={onClose} width={isMobile ? 900 : showPdf ? (pdfWide ? 2400 : 1420) : 900} height={isMobile ? undefined : 840} titleId="devis-modal-title">
           {/* header */}
-          <div style={{ padding: "20px 28px", borderBottom: "1px solid var(--nm-border)", display: "flex", alignItems: "center", gap: 14, flexShrink: 0, background: "var(--nm-base-raised)" }}>
+          <div style={{ padding: "clamp(14px, 3vw, 20px) clamp(16px, 4vw, 28px)", borderBottom: "1px solid var(--nm-border)", display: "flex", alignItems: "center", gap: "clamp(8px, 2vw, 14px)", flexShrink: 0, background: "var(--nm-base-raised)" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", marginBottom: 5 }}>{devis.numeroDevis ?? "—"}</div>
-              <div id="devis-modal-title" style={{ fontSize: 18, fontWeight: 700, color: "var(--nm-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{devis.entreprise?.nom ?? "—"}</div>
+              <div id="devis-modal-title" style={{ fontSize: "clamp(15px, 4vw, 18px)", fontWeight: 700, color: "var(--nm-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{devis.entreprise?.nom ?? "—"}</div>
             </div>
-            <button onClick={() => setShowEchanges((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: showEchanges ? "var(--nm-warning-bg)" : "var(--nm-base-sunken)", color: showEchanges ? "var(--nm-warning)" : "var(--nm-text-muted)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+            <button className="hide-mobile" onClick={() => setShowEchanges((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: showEchanges ? "var(--nm-warning-bg)" : "var(--nm-base-sunken)", color: showEchanges ? "var(--nm-warning)" : "var(--nm-text-muted)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
               {showEchanges ? "← Détails" : "Échanges LLM"}
             </button>
             {devis.hasPdf && (
-              <button onClick={() => setShowPdf((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: "var(--nm-info-bg)", color: "var(--nm-info)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+              <button className="hide-mobile" onClick={() => setShowPdf((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: "var(--nm-info-bg)", color: "var(--nm-info)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
                 {showPdf ? "Masquer le PDF" : "Voir le PDF"}
               </button>
             )}
             {devis.hasPdf && showPdf && (
-              <button onClick={() => setPdfWide((v) => !v)} title={pdfWide ? "Réduire l'aperçu" : "Agrandir l'aperçu"} aria-label={pdfWide ? "Réduire l'aperçu du PDF" : "Agrandir l'aperçu du PDF"} style={{ width: 32, height: 32, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <button className="hide-mobile" onClick={() => setPdfWide((v) => !v)} title={pdfWide ? "Réduire l'aperçu" : "Agrandir l'aperçu"} aria-label={pdfWide ? "Réduire l'aperçu du PDF" : "Agrandir l'aperçu du PDF"} style={{ width: 32, height: 32, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 {pdfWide ? (
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" stroke="var(--nm-text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 ) : (
@@ -168,10 +173,28 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                 )}
               </button>
             )}
-            <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", fontFamily: "monospace", background: statutBg(s), color: statutColor(s) }}>{statutLabel(s)}</span>
-            <button onClick={onClose} aria-label="Fermer" style={{ width: 32, height: 32, background: "var(--nm-base-raised)", border: "none", borderRadius: 7, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span className="hide-mobile" style={{ padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", fontFamily: "monospace", background: statutBg(s), color: statutColor(s) }}>{statutLabel(s)}</span>
+            <button onClick={onClose} aria-label="Fermer" className="touch-target" style={{ width: 32, height: 32, background: "var(--nm-base-raised)", border: "none", borderRadius: 7, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="var(--nm-text-muted)" strokeWidth="1.8" strokeLinecap="round"/></svg>
             </button>
+          </div>
+
+          {/* onglets — mobile uniquement */}
+          <div className="show-mobile" style={{ display: "flex", gap: 4, padding: "8px clamp(16px, 4vw, 28px) 0", borderBottom: "1px solid var(--nm-border)", flexShrink: 0, background: "var(--nm-base-raised)" }}>
+            {([
+              ["details", "Détails"],
+              ...(devis.hasPdf ? [["pdf", "PDF"] as const] : []),
+              ["echanges", "Échanges"],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                aria-current={tab === key ? "page" : undefined}
+                style={{ flex: 1, minHeight: 42, padding: "0 10px", background: "transparent", border: "none", borderBottom: `2px solid ${tab === key ? "var(--nm-accent)" : "transparent"}`, color: tab === key ? "var(--nm-accent)" : "var(--nm-text-muted)", fontSize: 13, fontWeight: tab === key ? 600 : 400, fontFamily: "inherit", cursor: "pointer" }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* split: contenu à gauche, PDF à droite */}
@@ -179,8 +202,10 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
 
           {/* body */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 8px" }}>
-            {showEchanges ? (
+          <div style={{ flex: 1, overflowY: "auto", padding: "clamp(18px, 4vw, 28px) clamp(16px, 4vw, 28px) 8px" }}>
+            {isMobile && tab === "pdf" && devis.hasPdf ? (
+              <iframe src={api.devis.pdfUrl(devis.id)} title="PDF du devis" style={{ width: "100%", height: "100%", minHeight: "60vh", border: "none", borderRadius: 8, background: "var(--nm-base-sunken)" }} />
+            ) : (isMobile ? tab === "echanges" : showEchanges) ? (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "monospace", marginBottom: 12 }}>Échanges avec le LLM</div>
                 <EchangesLlm load={loadEchanges} />
@@ -188,7 +213,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
             ) : !editMode ? (
               <>
                 {/* meta grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 18 }}>
+                <div className="stack-mobile-2" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 18 }}>
                   {[
                     { label: "Entreprise", value: devis.entreprise?.nom ?? "—" },
                     { label: "Référence", value: devis.numeroDevis ?? "—", mono: true },
@@ -201,7 +226,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                     </div>
                   ))}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14, marginBottom: 22 }}>
+                <div className="stack-mobile-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14, marginBottom: 22 }}>
                   {[
                     { label: "Date", value: formatDate(devis.dateDevis) },
                     { label: "Validité", value: formatDate(devis.dateValidite) },
@@ -225,20 +250,20 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                 {/* lignes */}
                 <div style={{ marginBottom: 8 }}>
                   <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "monospace", marginBottom: 12 }}>Lignes du devis</div>
-                  <div style={{ border: "1px solid var(--nm-border)", borderRadius: 8, overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 56px 64px 96px 96px", padding: "0 16px", background: "var(--nm-base-sunken)", borderBottom: "1px solid var(--nm-border)" }}>
+                  <div className="table-to-cards" style={{ border: "1px solid var(--nm-border)", borderRadius: 8, overflow: "hidden" }}>
+                    <div className="tc-head" style={{ display: "grid", gridTemplateColumns: "80px 1fr 56px 64px 96px 96px", padding: "0 16px", background: "var(--nm-base-sunken)", borderBottom: "1px solid var(--nm-border)" }}>
                       {["Réf.", "Désignation", "Qté", "Unité", "P.U. HT", "Total HT"].map((h, i) => (
                         <div key={h} style={{ padding: "9px 8px", fontSize: 9, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "monospace", textAlign: i >= 4 ? "right" : i === 2 ? "right" : undefined }}>{h}</div>
                       ))}
                     </div>
                     {devis.lignes.map((l) => (
-                      <div key={l.id} style={{ display: "grid", gridTemplateColumns: "80px 1fr 56px 64px 96px 96px", padding: "0 16px", borderBottom: "1px solid var(--nm-base)" }}>
-                        <div style={{ padding: "11px 8px", fontSize: 11, fontFamily: "monospace", color: "var(--nm-text-faint)" }}>{l.ordre}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.description}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{l.quantite ?? "—"}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-muted)" }}>{l.unite ?? "—"}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{formatEur(l.prixUnitaire)}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-secondary)", textAlign: "right", fontWeight: 500 }}>{formatEur(l.totalLigne)}</div>
+                      <div key={l.id} className="tc-row" style={{ display: "grid", gridTemplateColumns: "80px 1fr 56px 64px 96px 96px", padding: "0 16px", borderBottom: "1px solid var(--nm-base)" }}>
+                        <div data-label="Réf." style={{ padding: "11px 8px", fontSize: 11, fontFamily: "monospace", color: "var(--nm-text-faint)" }}>{l.ordre}</div>
+                        <div data-label="Désignation" style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.description}</div>
+                        <div data-label="Qté" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{l.quantite ?? "—"}</div>
+                        <div data-label="Unité" style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-muted)" }}>{l.unite ?? "—"}</div>
+                        <div data-label="P.U. HT" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{formatEur(l.prixUnitaire)}</div>
+                        <div data-label="Total HT" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-secondary)", textAlign: "right", fontWeight: 500 }}>{formatEur(l.totalLigne)}</div>
                       </div>
                     ))}
                   </div>
@@ -263,7 +288,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                     {attachError && <div style={{ marginTop: 8, fontSize: 12, color: "var(--nm-danger)" }}>{attachError}</div>}
                   </div>
                 )}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+                <div className="stack-mobile" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
                   <div>
                     <label htmlFor="devis-edit-numero" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Référence</label>
                     <input id="devis-edit-numero" value={numeroDevis} onChange={(e) => setNumeroDevis(e.target.value)} style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
@@ -303,9 +328,9 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                   </div>
                 </div>
                 <div style={{ marginBottom: 8 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 10, flexWrap: "wrap" }}>
                     <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "monospace" }}>Lignes du devis</div>
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {devis.lignes.length > 0 && (
                         <button onClick={handleRecalculer} disabled={recalculating} title="Remplace HT/TTC par la somme des lignes" style={{ padding: "6px 12px", background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 6, color: "var(--nm-text-secondary)", fontSize: 12, cursor: recalculating ? "not-allowed" : "pointer", opacity: recalculating ? 0.6 : 1, fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" stroke="var(--nm-text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -324,26 +349,26 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                       </button>
                     </div>
                   </div>
-                  <div style={{ border: "1px solid var(--nm-border)", borderRadius: 8, overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 56px 64px 96px 96px 96px 76px", padding: "0 16px", background: "var(--nm-base-sunken)", borderBottom: "1px solid var(--nm-border)" }}>
+                  <div className="table-to-cards" style={{ border: "1px solid var(--nm-border)", borderRadius: 8, overflow: "hidden" }}>
+                    <div className="tc-head" style={{ display: "grid", gridTemplateColumns: "80px 1fr 56px 64px 96px 96px 96px 76px", padding: "0 16px", background: "var(--nm-base-sunken)", borderBottom: "1px solid var(--nm-border)" }}>
                       {["Réf.", "Désignation", "Qté", "Unité", "P.U. HT", "Total HT", "Total TTC", ""].map((h, i) => (
                         <div key={h || i} style={{ padding: "9px 8px", fontSize: 9, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "monospace", textAlign: i >= 4 && i <= 6 ? "right" : i === 2 ? "right" : undefined }}>{h}</div>
                       ))}
                     </div>
                     {devis.lignes.map((l) => (
-                      <div key={l.id} style={{ display: "grid", gridTemplateColumns: "80px 1fr 56px 64px 96px 96px 96px 76px", padding: "0 16px", borderBottom: "1px solid var(--nm-base)" }}>
-                        <div style={{ padding: "11px 8px", fontSize: 11, fontFamily: "monospace", color: "var(--nm-text-faint)" }}>{l.ordre}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.description}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{l.quantite ?? "—"}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-muted)" }}>{l.unite ?? "—"}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{formatEur(l.prixUnitaire)}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-secondary)", textAlign: "right", fontWeight: 500 }}>{formatEur(l.totalLigne)}</div>
-                        <div style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{l.totalLigne != null ? formatEur(l.totalLigne * (1 + (devis.tvaTaux ?? 20) / 100)) : "—"}</div>
-                        <div style={{ padding: "9px 8px", display: "flex", justifyContent: "flex-end", gap: 6 }}>
-                          <button onClick={() => setLigneEnCours(l)} title="Modifier" aria-label="Modifier la ligne" style={{ width: 24, height: 24, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div key={l.id} className="tc-row" style={{ display: "grid", gridTemplateColumns: "80px 1fr 56px 64px 96px 96px 96px 76px", padding: "0 16px", borderBottom: "1px solid var(--nm-base)" }}>
+                        <div data-label="Réf." style={{ padding: "11px 8px", fontSize: 11, fontFamily: "monospace", color: "var(--nm-text-faint)" }}>{l.ordre}</div>
+                        <div data-label="Désignation" style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.description}</div>
+                        <div data-label="Qté" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{l.quantite ?? "—"}</div>
+                        <div data-label="Unité" style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-muted)" }}>{l.unite ?? "—"}</div>
+                        <div data-label="P.U. HT" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{formatEur(l.prixUnitaire)}</div>
+                        <div data-label="Total HT" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-secondary)", textAlign: "right", fontWeight: 500 }}>{formatEur(l.totalLigne)}</div>
+                        <div data-label="Total TTC" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{l.totalLigne != null ? formatEur(l.totalLigne * (1 + (devis.tvaTaux ?? 20) / 100)) : "—"}</div>
+                        <div data-label="" style={{ padding: "9px 8px", display: "flex", justifyContent: "flex-end", gap: 6 }}>
+                          <button onClick={() => setLigneEnCours(l)} title="Modifier" aria-label="Modifier la ligne" className="touch-target" style={{ width: 24, height: 24, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="var(--nm-text-tertiary)" strokeWidth="2" strokeLinecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="var(--nm-text-tertiary)" strokeWidth="2" strokeLinecap="round"/></svg>
                           </button>
-                          <button onClick={() => setConfirmDeleteLigne(l)} title="Supprimer" aria-label="Supprimer la ligne" style={{ width: 24, height: 24, background: "transparent", border: "1px solid var(--nm-danger-border)", borderRadius: 5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <button onClick={() => setConfirmDeleteLigne(l)} title="Supprimer" aria-label="Supprimer la ligne" className="touch-target" style={{ width: 24, height: 24, background: "transparent", border: "1px solid var(--nm-danger-border)", borderRadius: 5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6" stroke="var(--nm-danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           </button>
                         </div>
@@ -359,7 +384,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
           </div>
 
           {/* footer */}
-          <div style={{ padding: "16px 28px", borderTop: "1px solid var(--nm-border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, background: "var(--nm-base-raised)" }}>
+          <div style={{ padding: "16px clamp(16px, 4vw, 28px)", borderTop: "1px solid var(--nm-border)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", flexShrink: 0, background: "var(--nm-base-raised)" }}>
             {!editMode ? (
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => setEditMode(true)} style={{ padding: "9px 20px", background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, color: "var(--nm-text-secondary)", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 7 }}>
@@ -384,8 +409,8 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
 
           </div>{/* fin colonne gauche */}
 
-          {/* pane PDF */}
-          {showPdf && devis.hasPdf && (
+          {/* pane PDF — desktop uniquement, en mobile c'est l'onglet « PDF » */}
+          {showPdfPane && (
             <div style={{ width: pdfWide ? "min(1900px, 90vw)" : 500, flexShrink: 0, borderLeft: "1px solid var(--nm-border)", background: "var(--nm-base-sunken)" }}>
               <iframe src={api.devis.pdfUrl(devis.id)} title="PDF du devis" style={{ width: "100%", height: "100%", border: "none" }} />
             </div>
@@ -452,7 +477,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
       )}
 
       {/* toast */}
-      <div style={{ position: "fixed", bottom: 24, left: "50%", transform: `translateX(-50%) translateY(${showToast ? "0px" : "10px"})`, zIndex: 100, background: "var(--nm-success-bg)", border: "1px solid var(--nm-success)", borderRadius: 9, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10, opacity: showToast ? 1 : 0, pointerEvents: "none", transition: "opacity 0.3s ease, transform 0.3s ease", whiteSpace: "nowrap" }}>
+      <div style={{ position: "fixed", bottom: isMobile ? 80 : 24, left: "50%", transform: `translateX(-50%) translateY(${showToast ? "0px" : "10px"})`, zIndex: 100, background: "var(--nm-success-bg)", border: "1px solid var(--nm-success)", borderRadius: 9, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10, opacity: showToast ? 1 : 0, pointerEvents: "none", transition: "opacity 0.3s ease, transform 0.3s ease", whiteSpace: "nowrap", maxWidth: "calc(100vw - 32px)" }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="var(--nm-success)" strokeWidth="2.5" strokeLinecap="round"/></svg>
         <span style={{ fontSize: 13, fontWeight: 500, color: "var(--nm-success)" }}>Modifications enregistrées en base</span>
       </div>
@@ -547,7 +572,7 @@ export function LigneForm({ ligne, nextOrdre, onCancel, onSave }: {
           <label htmlFor="ligne-form-description" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Désignation</label>
           <input id="ligne-form-description" value={description} onChange={(e) => setDescription(e.target.value)} style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+        <div className="stack-mobile-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
           <div>
             <label htmlFor="ligne-form-qte" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Qté</label>
             <input id="ligne-form-qte" value={quantite} onChange={(e) => handleQuantiteChange(e.target.value)} inputMode="decimal" style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 10px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>

@@ -64,7 +64,7 @@ export function FactureCreateModal({ onClose, onCreated }: { onClose: () => void
           {error && (
             <div style={{ background: "var(--nm-danger-bg)", border: "1px solid var(--nm-danger-border)", borderRadius: 8, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: "var(--nm-danger)" }}>{error}</div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div className="stack-mobile" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <div style={{ gridColumn: "1 / -1" }}>
               <label htmlFor="facture-create-devis" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Lier à un devis (optionnel)</label>
               <select id="facture-create-devis" value={devisId ?? ""} onChange={(e) => setDevisId(e.target.value ? Number(e.target.value) : undefined)} style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}>

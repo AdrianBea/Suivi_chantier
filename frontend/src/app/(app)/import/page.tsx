@@ -178,10 +178,10 @@ function ImportPageInner() {
   return (
     <div style={{ fontFamily: "inherit" }}>
       {/* 2-col layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(300px, 400px)", minHeight: "calc(100vh - 52px)" }}>
+      <div className="import-split" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(300px, 400px)", minHeight: "calc(100vh - 52px)" }}>
 
         {/* LEFT */}
-        <div style={{ padding: "32px 32px 56px 40px", borderRight: "1px solid var(--nm-base-sunken)", overflowY: "auto" }}>
+        <div className="import-left" style={{ padding: "32px clamp(16px, 4vw, 32px) 56px clamp(16px, 4vw, 40px)", borderRight: "1px solid var(--nm-base-sunken)", overflowY: "auto" }}>
 
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 10, color: "var(--nm-accent)", letterSpacing: "0.18em", fontFamily: "monospace", textTransform: "uppercase", marginBottom: 8 }}>Import de documents</div>
@@ -190,7 +190,7 @@ function ImportPageInner() {
           </div>
 
           {/* type selector */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
             {(["DEVIS", "FAC"] as DocType[]).map((t) => (
               <button key={t} onClick={() => setDefaultDocType(t)} style={{ padding: "5px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600, border: "1px solid", borderColor: defaultDocType === t ? "var(--nm-accent)" : "var(--nm-border-strong)", background: defaultDocType === t ? "rgba(249,115,22,0.1)" : "transparent", color: defaultDocType === t ? "var(--nm-accent)" : "var(--nm-text-muted)", cursor: "pointer", fontFamily: "inherit" }}>
                 {t === "DEVIS" ? "Devis" : "Facture"}
@@ -204,7 +204,7 @@ function ImportPageInner() {
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
             onDrop={handleDrop}
-            style={{ border: `2px dashed ${dragOver ? "var(--nm-accent)" : "var(--nm-border-strong)"}`, borderRadius: 14, background: dragOver ? "rgba(249,115,22,0.06)" : "var(--nm-base-raised)", padding: "52px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, cursor: "pointer", transition: "border-color 0.2s, background 0.2s", marginBottom: 32 }}
+            style={{ border: `2px dashed ${dragOver ? "var(--nm-accent)" : "var(--nm-border-strong)"}`, borderRadius: 14, background: dragOver ? "rgba(249,115,22,0.06)" : "var(--nm-base-raised)", padding: "clamp(28px, 7vw, 52px) clamp(16px, 4vw, 32px)", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, cursor: "pointer", transition: "border-color 0.2s, background 0.2s", marginBottom: 32 }}
           >
             <div style={{ width: 62, height: 62, borderRadius: 14, background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -303,7 +303,7 @@ function ImportPageInner() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div style={{ background: "var(--nm-base)", overflowY: "auto", position: "sticky", top: 52, height: "calc(100vh - 52px)" }}>
+        <div className="import-right" style={{ background: "var(--nm-base)", overflowY: "auto", position: "sticky", top: 52, height: "calc(100vh - 52px)" }}>
           {selected && (selected.status === "extracted" || selected.status === "saved") ? (
             <div style={{ padding: "28px 24px" }}>
               {/* header */}
@@ -317,7 +317,7 @@ function ImportPageInner() {
               </div>
 
               {/* fields */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 8, marginBottom: 16 }}>
                 <div style={{ background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border)", borderRadius: 8, padding: "11px 13px" }}>
                   <div style={{ fontSize: 9, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 5 }}>Lot</div>
                   <div style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500 }}>{selected.lot ?? "—"}</div>
@@ -381,7 +381,7 @@ function ImportPageInner() {
               </div>
             </div>
           ) : (
-            <div style={{ height: "100%", minHeight: "calc(100vh - 52px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, padding: 40, textAlign: "center" }}>
+            <div className="import-empty" style={{ height: "100%", minHeight: "calc(100vh - 52px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, padding: 40, textAlign: "center" }}>
               <div style={{ width: 56, height: 56, borderRadius: 12, background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   <path d="M9 12h6m-6 4h6M9 8h1M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="var(--nm-text-faint)" strokeWidth="2" strokeLinecap="round"/>

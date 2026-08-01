@@ -26,6 +26,10 @@ export function Modal({
     return () => dialog.removeAttribute("open");
   }, []);
 
+  // au-delà de 520px une modale ne tient plus sur un téléphone : elle passe en
+  // plein écran. Les confirmations (≤ 480px) restent centrées, elles sont lisibles.
+  const fullscreenOnMobile = width > 520;
+
   return (
     <dialog
       ref={ref}
@@ -35,7 +39,7 @@ export function Modal({
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className="nm-modal-pop"
+      className={`nm-modal-pop${fullscreenOnMobile ? " nm-modal-fullscreen" : ""}`}
       style={{
         background: "var(--nm-base)",
         border: "none",
@@ -49,7 +53,7 @@ export function Modal({
         boxShadow: "-10px -10px 24px var(--nm-shadow-light), 14px 14px 32px var(--nm-shadow-dark), 0 24px 60px rgba(0,0,0,0.35)",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", height: height ? "100%" : undefined, maxHeight: "88vh", overflow: "hidden" }}>
+      <div className="nm-modal-body" style={{ display: "flex", flexDirection: "column", height: height ? "100%" : undefined, maxHeight: "88vh", overflow: "hidden" }}>
         {children}
       </div>
     </dialog>

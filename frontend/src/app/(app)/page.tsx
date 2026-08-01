@@ -113,13 +113,13 @@ export default function Dashboard() {
       `}</style>
 
       {/* PAGE BODY */}
-      <div style={{ minHeight: "calc(100vh - 52px)", padding: "32px 40px 56px" }}>
+      <div className="page-shell dash-shell" style={{ minHeight: "calc(100vh - 52px)" }}>
 
         {/* HEADER */}
-        <div ref={heroRef} className="parallax-layer" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28, animation: "fadeUp 0.5s 0.05s ease both" }}>
-          <div>
+        <div ref={heroRef} className="parallax-layer" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28, gap: 14, flexWrap: "wrap", animation: "fadeUp 0.5s 0.05s ease both" }}>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 10, letterSpacing: "0.18em", color: "var(--nm-accent)", textTransform: "uppercase", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 8 }}>Tableau de bord · Le Point Travaux</div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.01em" }}>{user?.adresse || "Maison individuelle — Construction neuve"}</h1>
+            <h1 style={{ fontSize: "clamp(20px, 5vw, 26px)", fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.01em" }}>{user?.adresse || "Maison individuelle — Construction neuve"}</h1>
             <div style={{ fontSize: 13, color: "var(--nm-text-muted)", marginTop: 5 }}>
               {(user?.nom || user?.prenom) && `${user.prenom ?? ""} ${user.nom ?? ""}`.trim() + " · "}
               {devis.length + factures.length > 0
@@ -127,7 +127,7 @@ export default function Dashboard() {
                 : "Aucun document importé"}
             </div>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             {user?.isAdmin && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border)", borderRadius: 6, padding: "6px 12px" }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", background: lmOk ? "var(--nm-success)" : lmOk === false ? "var(--nm-danger)" : "var(--nm-text-muted)", boxShadow: lmOk ? "0 0 6px 1px color-mix(in srgb, var(--nm-success) 55%, transparent)" : "none" }} />
@@ -149,12 +149,12 @@ export default function Dashboard() {
         {loading ? <LoadState /> : <>
 
         {/* KPI CARDS */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 24 }}>
+        <div className="dash-kpis" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 24 }}>
           <KpiCard delay="0.1s" title="Budget prévu" value={budgetPrevu > 0 ? fmtEur(budgetPrevu) : "—"} sub={`${devis.length} devis contractuels`} />
           <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "20px 22px", animation: "fadeUp 0.5s 0.15s ease both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>Engagé</div>
-            <div style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-accent)", letterSpacing: "-0.02em" }}>{budgetEngage > 0 ? fmtEur(budgetEngage) : "—"}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+            <div className="kpi-label" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>Engagé</div>
+            <div className="kpi-value" style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-accent)", letterSpacing: "-0.02em" }}>{budgetEngage > 0 ? fmtEur(budgetEngage) : "—"}</div>
+            <div className="kpi-sub" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
               <div style={{ flex: 1, height: 3, background: "var(--nm-border)", borderRadius: 2, overflow: "hidden" }}>
                 <div ref={budgetBarRef} style={{ width: "0%", height: "100%", background: "var(--nm-accent)", borderRadius: 2, transition: "width 1.4s cubic-bezier(0.4,0,0.2,1)" }} />
               </div>
@@ -163,30 +163,30 @@ export default function Dashboard() {
           </div>
           <KpiCard delay="0.2s" title="Documents" value={null} sub="">
             <div style={{ display: "flex", alignItems: "flex-end", gap: 16 }}>
-              <div><div style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-text-primary)" }}>{devis.length}</div><div style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 4 }}>Devis</div></div>
+              <div><div className="kpi-value" style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-text-primary)" }}>{devis.length}</div><div className="kpi-sub" style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 4 }}>Devis</div></div>
               <div style={{ width: 1, height: 32, background: "var(--nm-border)", marginBottom: 4 }} />
-              <div><div style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-text-primary)" }}>{factures.length}</div><div style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 4 }}>Factures</div></div>
+              <div><div className="kpi-value" style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-text-primary)" }}>{factures.length}</div><div className="kpi-sub" style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 4 }}>Factures</div></div>
             </div>
           </KpiCard>
           <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderTop: "2px solid var(--nm-warning)", borderRadius: 10, padding: "20px 22px", animation: "fadeUp 0.5s 0.25s ease both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>En attente</div>
-            <div style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-warning)" }}>{facturesEnAttente}</div>
-            <div style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 7 }}>Factures à rapprocher</div>
+            <div className="kpi-label" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>En attente</div>
+            <div className="kpi-value" style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-warning)" }}>{facturesEnAttente}</div>
+            <div className="kpi-sub" style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 7 }}>Factures à rapprocher</div>
           </div>
           <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderTop: "2px solid var(--nm-success)", borderRadius: 10, padding: "20px 22px", animation: "fadeUp 0.5s 0.3s ease both" }}>
-            <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>Conformité</div>
-            <div style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-success)" }}>{conformite}%</div>
-            <div style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 7 }}>Devis → Factures</div>
+            <div className="kpi-label" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>Conformité</div>
+            <div className="kpi-value" style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-success)" }}>{conformite}%</div>
+            <div className="kpi-sub" style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 7 }}>Devis → Factures</div>
           </div>
         </div>
 
         {/* MAIN: Donut + Lots */}
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(260px, 300px) minmax(320px, 1fr)", gap: 16, marginBottom: 16 }}>
+        <div className="dash-main" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 16, marginBottom: 16 }}>
           {/* DONUT */}
-          <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "28px 24px", display: "flex", flexDirection: "column", alignItems: "center", animation: "fadeUp 0.5s 0.35s ease both" }}>
+          <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "28px clamp(16px, 4vw, 24px)", display: "flex", flexDirection: "column", alignItems: "center", animation: "fadeUp 0.5s 0.35s ease both" }}>
             <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", alignSelf: "flex-start", marginBottom: 20 }}>Avancement global</div>
-            <div style={{ position: "relative", width: 180, height: 180 }}>
-              <svg width="180" height="180" viewBox="0 0 192 192">
+            <div style={{ position: "relative", width: "min(180px, 60vw)", aspectRatio: "1", maxWidth: 180 }}>
+              <svg width="100%" height="100%" viewBox="0 0 192 192">
                 <circle cx="96" cy="96" r="80" fill="none" stroke="var(--nm-base-sunken)" strokeWidth="16" />
                 <circle ref={donutRef} cx="96" cy="96" r="80" fill="none" stroke="var(--nm-accent)" strokeWidth="16"
                   strokeLinecap="round"
@@ -221,8 +221,8 @@ export default function Dashboard() {
           </div>
 
           {/* LOTS */}
-          <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "28px 28px", animation: "fadeUp 0.5s 0.4s ease both" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+          <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "28px clamp(16px, 4vw, 28px)", minWidth: 0, animation: "fadeUp 0.5s 0.4s ease both" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, gap: 10, flexWrap: "wrap" }}>
               <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)" }}>Budget par lot</div>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 {[["var(--nm-success)", "Terminé"], ["var(--nm-accent)", "En cours"], ["var(--nm-border)", "À venir"]].map(([c, l]) => (
@@ -258,12 +258,12 @@ export default function Dashboard() {
         </div>
 
         {/* RECENT DOCS */}
-        <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "24px 28px", animation: "fadeUp 0.5s 0.45s ease both" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <div className="table-to-cards dash-recent" style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "24px clamp(16px, 4vw, 28px)", animation: "fadeUp 0.5s 0.45s ease both" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, gap: 10, flexWrap: "wrap" }}>
             <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)" }}>Documents récents</div>
             <Link href="/factures" style={{ fontSize: 12, color: "var(--nm-accent)", textDecoration: "none", fontWeight: 500 }}>Voir tout →</Link>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 160px 120px 100px", gap: 16, paddingBottom: 10, borderBottom: "1px solid var(--nm-border)", marginBottom: 2 }}>
+          <div className="tc-head" style={{ display: "grid", gridTemplateColumns: "40px 1fr 160px 120px 100px", gap: 16, paddingBottom: 10, borderBottom: "1px solid var(--nm-border)", marginBottom: 2 }}>
             <div />
             {["Document", "Lot", "Montant", "Statut"].map((h, i) => (
               <div key={h} style={{ fontSize: 10, letterSpacing: "0.1em", color: "var(--nm-text-faint)", textTransform: "uppercase", fontFamily: "var(--font-jetbrains-mono)", textAlign: i >= 2 ? "right" : "left" }}>{h}</div>
@@ -294,17 +294,17 @@ export default function Dashboard() {
             const href = isDevis ? `/devis/${doc.id}` : `/factures/${doc.id}`;
 
             return (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 1fr 160px 120px 100px", gap: 16, alignItems: "center", padding: "11px 0", borderBottom: "1px solid var(--nm-base-sunken)" }}>
-                <div style={{ width: 34, height: 34, borderRadius: 7, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <div key={i} className="tc-row" style={{ display: "grid", gridTemplateColumns: "40px 1fr 160px 120px 100px", gap: 16, alignItems: "center", padding: "11px 0", borderBottom: "1px solid var(--nm-base-sunken)" }}>
+                <div data-label="" style={{ width: 34, height: 34, borderRadius: 7, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <span style={{ fontSize: 9, fontFamily: "var(--font-jetbrains-mono)", fontWeight: 700, color: iconColor, letterSpacing: "0.05em" }}>{isDevis ? "DEVIS" : "FAC"}</span>
                 </div>
-                <div style={{ minWidth: 0 }}>
+                <div data-label="Document" style={{ minWidth: 0 }}>
                   <Link href={href} style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", textDecoration: "none" }}>{name}</Link>
                   <div style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 2 }}>{fmtDate(item._date)}</div>
                 </div>
-                <div style={{ fontSize: 12, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lot}</div>
-                <div style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 13, color: "var(--nm-text-tertiary)", textAlign: "right" }}>{montant}</div>
-                <div style={{ textAlign: "right" }}>
+                <div data-label="Lot" style={{ fontSize: 12, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lot}</div>
+                <div data-label="Montant" style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 13, color: "var(--nm-text-tertiary)", textAlign: "right" }}>{montant}</div>
+                <div data-label="Statut" style={{ textAlign: "right" }}>
                   <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", fontFamily: "var(--font-jetbrains-mono)", background: iconBg, color: iconColor }}>{statut}</span>
                 </div>
               </div>
@@ -322,11 +322,11 @@ function KpiCard({ delay, title, value, sub, children }: {
 }) {
   return (
     <div style={{ background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "20px 22px", animation: `fadeUp 0.5s ${delay} ease both` }}>
-      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>{title}</div>
+      <div className="kpi-label" style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>{title}</div>
       {children ?? (
         <>
-          <div style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.02em" }}>{value}</div>
-          <div style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 7 }}>{sub}</div>
+          <div className="kpi-value" style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 24, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.02em" }}>{value}</div>
+          <div className="kpi-sub" style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 7 }}>{sub}</div>
         </>
       )}
     </div>

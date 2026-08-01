@@ -263,6 +263,12 @@ dialog {
   to { opacity: 1; }
 }
 
+/* feuille glissante du menu « Plus » (BottomNav) */
+@keyframes nm-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
 /* ─── Neumorphic primitives ──────────────────────────────────────────── */
 
 .nm-surface {
@@ -342,6 +348,351 @@ dialog {
   transform: scale(0.97);
   transition-timing-function: ease-in;
   transition-duration: 100ms;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   Responsive — point de rupture unique à 768px
+   L'app est stylée à ~97% en `style={{}}` inline : Tailwind n'a presque rien
+   à quoi s'accrocher. Ces classes portent donc les changements de structure
+   (grille → pile, masquage), et les styles inline utilisent clamp()/minmax()
+   pour tout ce qui peut s'adapter sans media query.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* gouttières fluides : remplace les `padding: "32px 40px 56px"` en dur */
+.page-shell {
+  padding: 32px clamp(16px, 4vw, 40px) 56px;
+}
+
+.page-shell-narrow {
+  padding: 36px clamp(16px, 4vw, 40px) 64px;
+}
+
+@media (max-width: 767px) {
+  /* grilles de formulaire multi-colonnes → une seule colonne */
+  .stack-mobile {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* tuiles courtes (méta, dates) : 2 colonnes restent lisibles */
+  .stack-mobile-2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+
+  /* la barre d'onglets fixe ne doit rien recouvrir */
+  .has-bottom-nav {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* iOS Safari zoome sur tout champ sous 16px au focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* cibles tactiles : 44px minimum (WCAG 2.5.5) */
+  .touch-target {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .show-mobile {
+    display: none !important;
+  }
+}
+
+/* Cartes KPI du dashboard : mêmes proportions compactes que .stat-tile.
+   Les 5 cartes sont écrites en dur dans page.tsx, donc on cible par le
+   conteneur plutôt que de taguer chaque élément. */
+@media (max-width: 767px) {
+  .dash-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)) !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .dash-kpis > div {
+    padding: 9px 11px !important;
+    border-radius: var(--nm-radius-sm) !important;
+  }
+
+  /* libellé de carte (« Budget prévu », « Engagé »…) */
+  .dash-kpis .kpi-label {
+    font-size: 9px !important;
+    letter-spacing: 0.06em !important;
+    margin-bottom: 3px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* valeurs chiffrées, y compris celles imbriquées dans la carte « Documents » */
+  .dash-kpis .kpi-value {
+    font-size: 15px !important;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* sous-titres (« 3 devis contractuels », « Factures à rapprocher »…) */
+  .dash-kpis .kpi-sub {
+    font-size: 9px !important;
+    margin-top: 3px !important;
+    line-height: 1.25;
+  }
+}
+
+/* Tuiles de stats (pages devis/factures) : compactes en mobile pour ne pas
+   repousser la liste hors de l'écran — 3 par ligne au lieu de 2, moins hautes. */
+@media (max-width: 767px) {
+  .stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)) !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .stat-tile {
+    padding: 9px 10px !important;
+    border-radius: var(--nm-radius-sm);
+  }
+
+  .stat-label {
+    font-size: 9px !important;
+    letter-spacing: 0.06em !important;
+    margin-bottom: 3px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stat-value {
+    font-size: 17px !important;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* montants ("54 240 €") : plus longs que les compteurs, donc plus petits */
+  .stat-value-sm {
+    font-size: 13px !important;
+  }
+}
+
+/* Dashboard mobile : l'avancement global (donut) remonte au-dessus des KPI,
+   qui s'empilent sur 5 cartes et le repousseraient trop bas.
+   `order` n'agit que dans un conteneur flex → .page-shell le devient ici.
+   Le défaut est 0 : le header et l'éventuel message d'erreur restent donc
+   devant .dash-main (1), qui passe lui-même devant les KPI (2). */
+@media (max-width: 767px) {
+  .dash-shell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dash-shell > .dash-main {
+    order: 1;
+  }
+
+  .dash-shell > .dash-kpis {
+    order: 2;
+  }
+
+  .dash-shell > .dash-recent {
+    order: 3;
+  }
+}
+
+/* glossaire de la page Aide : terme au-dessus de sa définition, sans les coller */
+@media (max-width: 767px) {
+  dl.stack-mobile {
+    gap: 4px !important;
+  }
+
+  dl.stack-mobile > dd:not(:last-child) {
+    margin-bottom: 14px;
+  }
+}
+
+/* ComparaisonTable : vrai <table> à 8 colonnes → cartes empilées */
+@media (max-width: 767px) {
+  .cmp-wrap {
+    overflow-x: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .cmp-table,
+  .cmp-table tbody,
+  .cmp-table tr,
+  .cmp-table td {
+    display: block !important;
+    min-width: 0 !important;
+  }
+
+  .cmp-table thead {
+    display: none !important;
+  }
+
+  .cmp-table tr {
+    border: 1px solid var(--nm-border) !important;
+    border-radius: var(--nm-radius-md);
+    background: var(--nm-base);
+    box-shadow: var(--nm-shadow-raised-sm);
+    padding: 4px 14px;
+    margin-bottom: 10px;
+  }
+
+  .cmp-table td {
+    display: flex !important;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: none !important;
+    padding: 7px 0 !important;
+    text-align: right !important;
+  }
+
+  .cmp-table td:not(:last-child) {
+    border-bottom: 1px solid var(--nm-base-sunken);
+  }
+
+  .cmp-table td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: var(--font-jetbrains-mono), monospace;
+    color: var(--nm-text-faint);
+  }
+}
+
+/* page Import : le panneau de détail passe sous la file d'attente */
+@media (max-width: 767px) {
+  .import-split {
+    grid-template-columns: 1fr !important;
+    min-height: 0 !important;
+  }
+
+  .import-left {
+    border-right: none !important;
+    border-bottom: 1px solid var(--nm-base-sunken);
+    padding-bottom: 24px !important;
+  }
+
+  .import-right {
+    position: static !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* l'état vide occupe une page entière pour rien en mobile */
+  .import-right .import-empty {
+    min-height: 0 !important;
+    padding: 32px 20px !important;
+  }
+}
+
+/* ─── Modales plein écran sous 768px ──────────────────────────────────── */
+@media (max-width: 767px) {
+  .nm-modal-fullscreen {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;   /* dvh : tient compte de la barre d'URL mobile */
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .nm-modal-fullscreen > .nm-modal-body {
+    height: 100% !important;
+    max-height: 100dvh !important;
+  }
+
+  /* les confirmations restent centrées mais respirent */
+  dialog:not(.nm-modal-fullscreen) {
+    max-width: calc(100vw - 32px) !important;
+  }
+}
+
+/* ─── Tableaux en grille → cartes empilées ────────────────────────────────
+   Les lignes sont des `display: grid` avec des colonnes en px fixes. Sous
+   768px chaque ligne devient une carte et chaque cellule une paire
+   libellé/valeur, le libellé étant restitué depuis `data-label`.
+   ─────────────────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .table-to-cards > .tc-head {
+    display: none !important;
+  }
+
+  .table-to-cards > .tc-row {
+    display: block !important;
+    grid-template-columns: none !important;
+    border: 1px solid var(--nm-border);
+    border-radius: var(--nm-radius-md);
+    background: var(--nm-base);
+    box-shadow: var(--nm-shadow-raised-sm);
+    padding: 4px 14px !important;
+    margin-bottom: 10px;
+  }
+
+  .table-to-cards > .tc-row > * {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: right !important;
+    padding: 7px 0 !important;
+    min-width: 0;
+  }
+
+  .table-to-cards > .tc-row > *:not(:last-child) {
+    border-bottom: 1px solid var(--nm-base-sunken);
+  }
+
+  .table-to-cards > .tc-row > [data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: var(--font-jetbrains-mono), monospace;
+    color: var(--nm-text-faint);
+    font-weight: 400;
+  }
+
+  /* cellules sans libellé (chevron, actions) : centrées, pas de séparateur */
+  .table-to-cards > .tc-row > [data-label=""] {
+    justify-content: flex-end;
+    border-bottom: none !important;
+  }
+
+  /* le conteneur ne doit plus scroller horizontalement en mode cartes */
+  .table-to-cards-wrap {
+    overflow-x: visible !important;
+  }
+
+  .table-to-cards-wrap > * {
+    min-width: 0 !important;
+  }
+
+  /* la carte enveloppante disparaît : chaque ligne porte déjà la sienne */
+  .table-to-cards-card {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
 }
 
 /* respect reduced motion everywhere: kill transform/opacity transitions & parallax */
