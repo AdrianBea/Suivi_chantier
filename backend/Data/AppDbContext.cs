@@ -12,6 +12,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<LigneFacture> LignesFacture => Set<LigneFacture>();
     public DbSet<LlmExchange> LlmExchanges => Set<LlmExchange>();
     public DbSet<PieceJointe> PiecesJointes => Set<PieceJointe>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,9 +36,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<LlmExchange>()
             .HasIndex(e => new { e.TypeDocument, e.DocumentId });
 
-        // Siret unique, plusieurs NULL autorisés (entreprises sans SIRET)
+        // Siret unique par utilisateur, plusieurs NULL autorisés (entreprises sans SIRET)
         modelBuilder.Entity<Entreprise>()
-            .HasIndex(e => e.Siret)
+            .HasIndex(e => new { e.UserId, e.Siret })
+            .IsUnique();
+
+        modelBuilder.Entity<User>()
+            .Property(u => u.Email)
+            .HasMaxLength(255);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
             .IsUnique();
 
         // Longueur bornée pour permettre l'index unique
@@ -53,15 +62,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .Property(e => e.Siret)
             .HasMaxLength(20);
 
-        // Evite double import du même numéro de devis pour la même entreprise
         modelBuilder.Entity<Devis>()
-            .HasIndex(d => new { d.EntrepriseId, d.NumeroDevis })
+            .Property(d => d.FichierPdfNom)
+            .HasMaxLength(255);
+
+        modelBuilder.Entity<Facture>()
+            .Property(f => f.FichierPdfNom)
+            .HasMaxLength(255);
+
+        // Evite double import du même numéro de devis pour la même entreprise, par utilisateur
+        modelBuilder.Entity<Devis>()
+            .HasIndex(d => new { d.UserId, d.EntrepriseId, d.NumeroDevis })
             .IsUnique()
             .HasFilter("\"NumeroDevis\" IS NOT NULL");
 
-        // Evite double import du même numéro de facture pour la même entreprise
+        // Evite double import du même numéro de facture pour la même entreprise, par utilisateur
         modelBuilder.Entity<Facture>()
-            .HasIndex(f => new { f.EntrepriseId, f.NumeroFacture })
+            .HasIndex(f => new { f.UserId, f.EntrepriseId, f.NumeroFacture })
             .IsUnique()
             .HasFilter("\"NumeroFacture\" IS NOT NULL");
 
@@ -83,6 +100,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<LigneFacture>().Property(l => l.Quantite).HasPrecision(18, 2);
         modelBuilder.Entity<LigneFacture>().Property(l => l.PrixUnitaire).HasPrecision(18, 2);
         modelBuilder.Entity<LigneFacture>().Property(l => l.TotalLigne).HasPrecision(18, 2);
+
+        modelBuilder.Entity<Entreprise>()
+            .HasOne(e => e.User)
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Devis>()
+            .HasOne(d => d.User)
+            .WithMany()
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Facture>()
+            .HasOne(f => f.User)
+            .WithMany()
+            .HasForeignKey(f => f.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Devis>()
             .HasOne(d => d.Entreprise)
@@ -124,10 +159,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<PieceJointe>()
             .Property(p => p.NomFichier)
             .HasMaxLength(255);
-
-        modelBuilder.Entity<PieceJointe>()
-            .Property(p => p.CheminFichier)
-            .HasMaxLength(500);
 
         modelBuilder.Entity<PieceJointe>()
             .Property(p => p.ContentType)

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend.Data;
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801060629_AddUsers")]
+    partial class AddUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,12 +51,8 @@ namespace backend.Migrations
                     b.Property<string>("ExtractionBrute")
                         .HasColumnType("text");
 
-                    b.Property<byte[]>("FichierPdfData")
-                        .HasColumnType("bytea");
-
-                    b.Property<string>("FichierPdfNom")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                    b.Property<string>("FichierPdfPath")
+                        .HasColumnType("text");
 
                     b.Property<string>("Lot")
                         .HasColumnType("text");
@@ -88,14 +87,9 @@ namespace backend.Migrations
                     b.Property<int?>("TypeLot")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("EntrepriseId");
-
-                    b.HasIndex("UserId", "EntrepriseId", "NumeroDevis")
+                    b.HasIndex("EntrepriseId", "NumeroDevis")
                         .IsUnique()
                         .HasFilter("\"NumeroDevis\" IS NOT NULL");
 
@@ -133,12 +127,9 @@ namespace backend.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "Siret")
+                    b.HasIndex("Siret")
                         .IsUnique();
 
                     b.ToTable("Entreprises");
@@ -170,12 +161,8 @@ namespace backend.Migrations
                     b.Property<string>("ExtractionBrute")
                         .HasColumnType("text");
 
-                    b.Property<byte[]>("FichierPdfData")
-                        .HasColumnType("bytea");
-
-                    b.Property<string>("FichierPdfNom")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                    b.Property<string>("FichierPdfPath")
+                        .HasColumnType("text");
 
                     b.Property<string>("NumeroFacture")
                         .HasMaxLength(100)
@@ -211,16 +198,11 @@ namespace backend.Migrations
                     b.Property<int?>("TypeLot")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DevisId");
 
-                    b.HasIndex("EntrepriseId");
-
-                    b.HasIndex("UserId", "EntrepriseId", "NumeroFacture")
+                    b.HasIndex("EntrepriseId", "NumeroFacture")
                         .IsUnique()
                         .HasFilter("\"NumeroFacture\" IS NOT NULL");
 
@@ -376,6 +358,11 @@ namespace backend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CheminFichier")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -383,10 +370,6 @@ namespace backend.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<byte[]>("Data")
-                        .IsRequired()
-                        .HasColumnType("bytea");
 
                     b.Property<int>("FactureId")
                         .HasColumnType("integer");
@@ -418,17 +401,8 @@ namespace backend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Adresse")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly?>("DateDebutChantier")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly?>("DateLivraisonPrevue")
-                        .HasColumnType("date");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -438,14 +412,8 @@ namespace backend.Migrations
                     b.Property<bool>("IsAdmin")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Nom")
-                        .HasColumnType("text");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Prenom")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -463,26 +431,7 @@ namespace backend.Migrations
                         .HasForeignKey("EntrepriseId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("backend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Entreprise");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("backend.Models.Entreprise", b =>
-                {
-                    b.HasOne("backend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.Facture", b =>
@@ -497,17 +446,9 @@ namespace backend.Migrations
                         .HasForeignKey("EntrepriseId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("backend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Devis");
 
                     b.Navigation("Entreprise");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.LigneFacture", b =>

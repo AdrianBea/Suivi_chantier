@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend.Data;
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801064053_AddProfileFieldsToUser")]
+    partial class AddProfileFieldsToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,12 +51,8 @@ namespace backend.Migrations
                     b.Property<string>("ExtractionBrute")
                         .HasColumnType("text");
 
-                    b.Property<byte[]>("FichierPdfData")
-                        .HasColumnType("bytea");
-
-                    b.Property<string>("FichierPdfNom")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                    b.Property<string>("FichierPdfPath")
+                        .HasColumnType("text");
 
                     b.Property<string>("Lot")
                         .HasColumnType("text");
@@ -170,12 +169,8 @@ namespace backend.Migrations
                     b.Property<string>("ExtractionBrute")
                         .HasColumnType("text");
 
-                    b.Property<byte[]>("FichierPdfData")
-                        .HasColumnType("bytea");
-
-                    b.Property<string>("FichierPdfNom")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                    b.Property<string>("FichierPdfPath")
+                        .HasColumnType("text");
 
                     b.Property<string>("NumeroFacture")
                         .HasMaxLength(100)
@@ -376,6 +371,11 @@ namespace backend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CheminFichier")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -383,10 +383,6 @@ namespace backend.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<byte[]>("Data")
-                        .IsRequired()
-                        .HasColumnType("bytea");
 
                     b.Property<int>("FactureId")
                         .HasColumnType("integer");

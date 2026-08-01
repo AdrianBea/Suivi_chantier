@@ -1,3 +1,22 @@
+export type UserDto = {
+  id: number;
+  email: string;
+  isAdmin: boolean;
+  dateDebutChantier: string | null;
+  dateLivraisonPrevue: string | null;
+  nom: string | null;
+  prenom: string | null;
+  adresse: string | null;
+};
+
+export interface UpdateProfileDto {
+  nom?: string | null;
+  prenom?: string | null;
+  adresse?: string | null;
+  dateDebutChantier?: string | null;
+  dateLivraisonPrevue?: string | null;
+}
+
 export type StatutExtraction = "EnAttente" | "Extrait" | "Erreur";
 export type TypeFacture = "Facture" | "Acompte" | "Solde";
 
@@ -210,9 +229,9 @@ export interface ComparaisonDto {
   factureId: number;
   devisId: number;
   entrepriseNom: string;
-  totalHtDevis?: number;
-  totalHtFacture?: number;
-  ecartTotalHt: number;
+  totalTtcDevis?: number;
+  totalTtcFacture?: number;
+  ecartTotalTtc: number;
   hasDiscrepancies: boolean;
   modeComparaison: "Lignes" | "Total";
   montantDejaFacture: number;

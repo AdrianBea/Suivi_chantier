@@ -7,19 +7,19 @@ namespace backend.Services;
 
 public interface IComparaisonService
 {
-    Task<ComparaisonDto> CompareAsync(int factureId);
+    Task<ComparaisonDto> CompareAsync(int factureId, int userId);
 }
 
 public class ComparaisonService(AppDbContext db) : IComparaisonService
 {
-    public async Task<ComparaisonDto> CompareAsync(int factureId)
+    public async Task<ComparaisonDto> CompareAsync(int factureId, int userId)
     {
         var facture = await db.Factures
             .Include(f => f.Lignes)
             .Include(f => f.Devis).ThenInclude(d => d!.Lignes)
             .Include(f => f.Devis).ThenInclude(d => d!.Factures)
             .Include(f => f.Entreprise)
-            .FirstOrDefaultAsync(f => f.Id == factureId)
+            .FirstOrDefaultAsync(f => f.Id == factureId && f.UserId == userId)
             ?? throw new KeyNotFoundException($"Facture {factureId} introuvable.");
 
         if (facture.DevisId == null)
@@ -28,16 +28,16 @@ public class ComparaisonService(AppDbContext db) : IComparaisonService
         var devis = facture.Devis!;
         var devisLignes = devis.Lignes.ToList();
 
-        // Cumul HT des autres factures liées au même devis (acomptes déjà émis)
+        // Cumul TTC des autres factures liées au même devis (acomptes déjà émis)
         var montantDejaFacture = devis.Factures
             .Where(f => f.Id != factureId)
-            .Sum(f => f.TotalHt ?? 0);
-        var resteAFacturer = (devis.TotalHt ?? 0) - montantDejaFacture;
+            .Sum(f => f.TotalTtc ?? 0);
+        var resteAFacturer = (devis.TotalTtc ?? 0) - montantDejaFacture;
 
         facture.Statut = StatutExtraction.Extrait;
         await db.SaveChangesAsync();
 
-        var ecartTotalHt = (facture.TotalHt ?? 0) - (devis.TotalHt ?? 0);
+        var ecartTotalTtc = (facture.TotalTtc ?? 0) - (devis.TotalTtc ?? 0);
 
         // Mode "Total" si la facture ne contient pas de lignes détaillées
         if (!facture.Lignes.Any())
@@ -47,10 +47,10 @@ public class ComparaisonService(AppDbContext db) : IComparaisonService
                 FactureId = facture.Id,
                 DevisId = facture.DevisId.Value,
                 EntrepriseNom = facture.Entreprise?.Nom ?? "—",
-                TotalHtDevis = devis.TotalHt,
-                TotalHtFacture = facture.TotalHt,
-                EcartTotalHt = ecartTotalHt,
-                HasDiscrepancies = Math.Abs(ecartTotalHt) > 0.01m,
+                TotalTtcDevis = devis.TotalTtc,
+                TotalTtcFacture = facture.TotalTtc,
+                EcartTotalTtc = ecartTotalTtc,
+                HasDiscrepancies = Math.Abs(ecartTotalTtc) > 0.01m,
                 ModeComparaison = "Total",
                 MontantDejaFacture = montantDejaFacture,
                 ResteAFacturer = resteAFacturer,
@@ -76,10 +76,10 @@ public class ComparaisonService(AppDbContext db) : IComparaisonService
             FactureId = facture.Id,
             DevisId = facture.DevisId.Value,
             EntrepriseNom = facture.Entreprise?.Nom ?? "—",
-            TotalHtDevis = devis.TotalHt,
-            TotalHtFacture = facture.TotalHt,
-            EcartTotalHt = ecartTotalHt,
-            HasDiscrepancies = Math.Abs(ecartTotalHt) > 0.01m || matchings.Any(m => m.match == null),
+            TotalTtcDevis = devis.TotalTtc,
+            TotalTtcFacture = facture.TotalTtc,
+            EcartTotalTtc = ecartTotalTtc,
+            HasDiscrepancies = Math.Abs(ecartTotalTtc) > 0.01m || matchings.Any(m => m.match == null),
             ModeComparaison = "Lignes",
             MontantDejaFacture = montantDejaFacture,
             ResteAFacturer = resteAFacturer,

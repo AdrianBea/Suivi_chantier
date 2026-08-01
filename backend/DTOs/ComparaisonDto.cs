@@ -5,15 +5,15 @@ public class ComparaisonDto
     public int FactureId { get; set; }
     public int DevisId { get; set; }
     public string EntrepriseNom { get; set; } = string.Empty;
-    public decimal? TotalHtDevis { get; set; }
-    public decimal? TotalHtFacture { get; set; }
-    public decimal EcartTotalHt { get; set; }
+    public decimal? TotalTtcDevis { get; set; }
+    public decimal? TotalTtcFacture { get; set; }
+    public decimal EcartTotalTtc { get; set; }
     public bool HasDiscrepancies { get; set; }
     // "Lignes" si la facture contient des lignes détaillées, "Total" sinon
     public string ModeComparaison { get; set; } = "Lignes";
-    // Cumul HT de toutes les autres factures (acomptes) liées au même devis
+    // Cumul TTC de toutes les autres factures (acomptes) liées au même devis
     public decimal MontantDejaFacture { get; set; }
-    // Devis.TotalHt - MontantDejaFacture (peut être négatif si sur-facturé)
+    // Devis.TotalTtc - MontantDejaFacture (peut être négatif si sur-facturé)
     public decimal ResteAFacturer { get; set; }
     public List<LigneComparaisonDto> Lignes { get; set; } = [];
 }

@@ -1,6 +1,7 @@
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
+using backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,9 @@ public class EntreprisesController(AppDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<EntrepriseDto>>> GetAll()
     {
+        var userId = User.GetUserId();
         return await db.Entreprises
+            .Where(e => e.UserId == userId)
             .OrderBy(e => e.Nom)
             .Select(e => MapToDto(e))
             .ToListAsync();
@@ -24,6 +27,7 @@ public class EntreprisesController(AppDbContext db) : ControllerBase
     {
         var entreprise = new Entreprise
         {
+            UserId = User.GetUserId(),
             Nom = dto.Nom,
             Siret = dto.Siret,
             ContactNom = dto.ContactNom,
@@ -39,7 +43,8 @@ public class EntreprisesController(AppDbContext db) : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<EntrepriseDto>> Update(int id, [FromBody] EntrepriseUpsertDto dto)
     {
-        var entreprise = await db.Entreprises.FindAsync(id);
+        var userId = User.GetUserId();
+        var entreprise = await db.Entreprises.FirstOrDefaultAsync(e => e.Id == id && e.UserId == userId);
         if (entreprise == null) return NotFound();
 
         entreprise.Nom = dto.Nom;
@@ -56,7 +61,8 @@ public class EntreprisesController(AppDbContext db) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var entreprise = await db.Entreprises.FindAsync(id);
+        var userId = User.GetUserId();
+        var entreprise = await db.Entreprises.FirstOrDefaultAsync(e => e.Id == id && e.UserId == userId);
         if (entreprise == null) return NotFound();
 
         var enUsage = await db.Devis.AnyAsync(d => d.EntrepriseId == id)

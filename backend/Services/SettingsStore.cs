@@ -41,10 +41,11 @@ public class SettingsStore : ISettingsStore
     {
         _openRouter = new OpenRouterSettings { Model = model, ApiKey = apiKey };
         PersistEnvValue("SUIVI_CHANTIER_OpenRouter__ApiKey", apiKey);
+        PersistEnvValue("SUIVI_CHANTIER_OpenRouter__Model", model);
     }
 
-    // ponytail: réécrit uniquement les clés secrètes dans backend/.env (gitignoré) ;
-    // Model reste dans appsettings.json (non sensible).
+    // ponytail: réécrit modèle et clé dans backend/.env (gitignoré) — sans ça le modèle
+    // choisi dans Paramètres était perdu à chaque redémarrage.
     private void PersistEnvValue(string key, string value)
     {
         var lines = File.Exists(_envPath) ? File.ReadAllLines(_envPath).ToList() : [];

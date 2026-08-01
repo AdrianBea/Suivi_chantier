@@ -1,6 +1,6 @@
 # .NET build artifacts
-backend/bin/
-backend/obj/
+bin/
+obj/
 
 # Local secrets / overrides (contains API keys, DB password)
 backend/appsettings.Development.json

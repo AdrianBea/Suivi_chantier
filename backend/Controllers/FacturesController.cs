@@ -9,7 +9,7 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("api/factures")]
-public class FacturesController(AppDbContext db, IExtractionService extractionService, IComparaisonService comparaisonService, IConfiguration config) : ControllerBase
+public class FacturesController(AppDbContext db, IExtractionService extractionService, IComparaisonService comparaisonService) : ControllerBase
 {
     [HttpPost("import")]
     public async Task<ActionResult<FactureDto>> Import(IFormFile file, [FromQuery] int? devisId, [FromForm] string? mode)
@@ -24,39 +24,36 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         if (file.Length > 50 * 1024 * 1024)
             return BadRequest("Le fichier ne doit pas dépasser 50 Mo.");
 
-        if (devisId.HasValue && !await db.Devis.AnyAsync(d => d.Id == devisId))
+        var userId = User.GetUserId();
+        if (devisId.HasValue && !await db.Devis.AnyAsync(d => d.Id == devisId && d.UserId == userId))
             return BadRequest($"Devis {devisId} introuvable.");
 
-        var uploadDir = Path.Combine(config["Uploads:BasePath"] ?? "uploads", "factures");
-        Directory.CreateDirectory(uploadDir);
-        var fileName = $"{Guid.NewGuid()}-{Path.GetFileName(file.FileName)}";
-        var filePath = Path.Combine(uploadDir, fileName);
-
-        await using (var stream = System.IO.File.Create(filePath))
-            await file.CopyToAsync(stream);
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
 
         var extractionMode = Enum.TryParse<ExtractionMode>(mode, true, out var m) ? m : ExtractionMode.Image;
-        var facture = await extractionService.CreateFactureEntryAsync(filePath, devisId);
-        extractionService.StartFactureExtraction(facture.Id, filePath, extractionMode);
+        var facture = await extractionService.CreateFactureEntryAsync(ms.ToArray(), Path.GetFileName(file.FileName), userId, devisId);
+        extractionService.StartFactureExtraction(facture.Id, extractionMode);
         return CreatedAtAction(nameof(GetById), new { id = facture.Id }, MapToDto(facture));
     }
 
     [HttpPost]
     public async Task<ActionResult<FactureDto>> Create([FromBody] FactureCreateDto dto)
     {
+        var userId = User.GetUserId();
         int? entrepriseId = dto.EntrepriseId;
         if (entrepriseId.HasValue)
         {
-            if (!await db.Entreprises.AnyAsync(e => e.Id == entrepriseId))
+            if (!await db.Entreprises.AnyAsync(e => e.Id == entrepriseId && e.UserId == userId))
                 return BadRequest($"Entreprise {entrepriseId} introuvable.");
         }
         else if (!string.IsNullOrWhiteSpace(dto.EntrepriseNom))
         {
-            var entreprise = await EntrepriseResolver.ResolveAsync(db, dto.EntrepriseNom);
+            var entreprise = await EntrepriseResolver.ResolveAsync(db, userId, dto.EntrepriseNom);
             entrepriseId = entreprise?.Id;
         }
 
-        if (dto.DevisId.HasValue && !await db.Devis.AnyAsync(d => d.Id == dto.DevisId))
+        if (dto.DevisId.HasValue && !await db.Devis.AnyAsync(d => d.Id == dto.DevisId && d.UserId == userId))
             return BadRequest($"Devis {dto.DevisId} introuvable.");
 
         TypeLot? typeLot = null;
@@ -69,6 +66,7 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
 
         var facture = new Facture
         {
+            UserId = userId,
             EntrepriseId = entrepriseId,
             DevisId = dto.DevisId,
             NumeroFacture = dto.NumeroFacture,
@@ -88,8 +86,10 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
+        var userId = User.GetUserId();
         var items = await db.Factures
             .Include(f => f.Entreprise)
+            .Where(f => f.UserId == userId)
             .OrderByDescending(f => f.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -101,11 +101,12 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpGet("{id}")]
     public async Task<ActionResult<FactureDto>> GetById(int id)
     {
+        var userId = User.GetUserId();
         var facture = await db.Factures
             .Include(f => f.Entreprise)
             .Include(f => f.Lignes.OrderBy(l => l.Ordre))
             .Include(f => f.PiecesJointes)
-            .FirstOrDefaultAsync(f => f.Id == id);
+            .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
 
         if (facture == null) return NotFound();
         return MapToDto(facture);
@@ -114,10 +115,11 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpPut("{id}")]
     public async Task<ActionResult<FactureDto>> Update(int id, [FromBody] FactureUpdateDto dto)
     {
+        var userId = User.GetUserId();
         var facture = await db.Factures
             .Include(f => f.Entreprise)
             .Include(f => f.Lignes.OrderBy(l => l.Ordre))
-            .FirstOrDefaultAsync(f => f.Id == id);
+            .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
 
         TypeLot? typeLot = null;
@@ -137,10 +139,10 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
             int? newEntrepriseId = dto.EntrepriseId;
             if (!newEntrepriseId.HasValue && !string.IsNullOrWhiteSpace(dto.EntrepriseNom))
             {
-                var entreprise = await EntrepriseResolver.ResolveAsync(db, dto.EntrepriseNom);
+                var entreprise = await EntrepriseResolver.ResolveAsync(db, userId, dto.EntrepriseNom);
                 newEntrepriseId = entreprise?.Id;
             }
-            else if (newEntrepriseId.HasValue && !await db.Entreprises.AnyAsync(e => e.Id == newEntrepriseId))
+            else if (newEntrepriseId.HasValue && !await db.Entreprises.AnyAsync(e => e.Id == newEntrepriseId && e.UserId == userId))
             {
                 return BadRequest($"Entreprise {newEntrepriseId} introuvable.");
             }
@@ -161,10 +163,11 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpPost("{id}/lignes")]
     public async Task<ActionResult<FactureDto>> AddLigne(int id, [FromBody] LignePosteUpsertDto dto)
     {
+        var userId = User.GetUserId();
         var facture = await db.Factures
             .Include(f => f.Entreprise)
             .Include(f => f.Lignes)
-            .FirstOrDefaultAsync(f => f.Id == id);
+            .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
 
         facture.Lignes.Add(new LigneFacture
@@ -185,10 +188,11 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpPut("{id}/lignes/{ligneId}")]
     public async Task<ActionResult<FactureDto>> UpdateLigne(int id, int ligneId, [FromBody] LignePosteUpsertDto dto)
     {
+        var userId = User.GetUserId();
         var facture = await db.Factures
             .Include(f => f.Entreprise)
             .Include(f => f.Lignes)
-            .FirstOrDefaultAsync(f => f.Id == id);
+            .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
 
         var ligne = facture.Lignes.FirstOrDefault(l => l.Id == ligneId);
@@ -208,10 +212,11 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpDelete("{id}/lignes/{ligneId}")]
     public async Task<ActionResult<FactureDto>> DeleteLigne(int id, int ligneId)
     {
+        var userId = User.GetUserId();
         var facture = await db.Factures
             .Include(f => f.Entreprise)
             .Include(f => f.Lignes)
-            .FirstOrDefaultAsync(f => f.Id == id);
+            .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
 
         var ligne = facture.Lignes.FirstOrDefault(l => l.Id == ligneId);
@@ -226,10 +231,11 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpPost("{id}/recalculer")]
     public async Task<ActionResult<FactureDto>> Recalculer(int id)
     {
+        var userId = User.GetUserId();
         var facture = await db.Factures
             .Include(f => f.Entreprise)
             .Include(f => f.Lignes.OrderBy(l => l.Ordre))
-            .FirstOrDefaultAsync(f => f.Id == id);
+            .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
 
         RecomputeTotals(facture);
@@ -251,7 +257,7 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     {
         try
         {
-            var dto = await comparaisonService.CompareAsync(id);
+            var dto = await comparaisonService.CompareAsync(id, User.GetUserId());
             return Ok(dto);
         }
         catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
@@ -261,10 +267,11 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpPatch("{id}/lier/{devisId}")]
     public async Task<IActionResult> LierAuDevis(int id, int devisId)
     {
-        var facture = await db.Factures.FindAsync(id);
+        var userId = User.GetUserId();
+        var facture = await db.Factures.FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
 
-        var devis = await db.Devis.FindAsync(devisId);
+        var devis = await db.Devis.FirstOrDefaultAsync(d => d.Id == devisId && d.UserId == userId);
         if (devis == null) return BadRequest($"Devis {devisId} introuvable.");
         if (devis.EntrepriseId != facture.EntrepriseId)
             return BadRequest("La facture et le devis n'appartiennent pas à la même entreprise.");
@@ -277,25 +284,12 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var facture = await db.Factures
-            .Include(f => f.PiecesJointes)
-            .FirstOrDefaultAsync(f => f.Id == id);
+        var userId = User.GetUserId();
+        var facture = await db.Factures.FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
-
-        var pieceJointePaths = facture.PiecesJointes.Select(p => p.CheminFichier).ToList();
 
         db.Factures.Remove(facture);
         await db.SaveChangesAsync();
-
-        if (!string.IsNullOrEmpty(facture.FichierPdfPath))
-        {
-            try { System.IO.File.Delete(facture.FichierPdfPath); } catch { /* best effort */ }
-        }
-
-        foreach (var path in pieceJointePaths)
-        {
-            try { System.IO.File.Delete(path); } catch { /* best effort */ }
-        }
 
         return NoContent();
     }
@@ -303,14 +297,14 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpGet("{id}/pdf")]
     public async Task<IActionResult> GetPdf(int id)
     {
-        var facture = await db.Factures.FindAsync(id);
+        var userId = User.GetUserId();
+        var facture = await db.Factures.FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
-        if (string.IsNullOrEmpty(facture.FichierPdfPath) || !System.IO.File.Exists(facture.FichierPdfPath))
+        if (facture.FichierPdfData == null)
             return NotFound("Aucun PDF disponible pour cette facture.");
 
-        var stream = System.IO.File.OpenRead(facture.FichierPdfPath);
         // Pas de nom de fichier => Content-Disposition: inline, consultation sans téléchargement
-        return File(stream, "application/pdf");
+        return File(facture.FichierPdfData, "application/pdf");
     }
 
     private static readonly Dictionary<string, string> AllowedPieceJointeTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -324,7 +318,8 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpPost("{id}/pieces-jointes")]
     public async Task<ActionResult<PieceJointeDto>> UploadPieceJointe(int id, IFormFile file, [FromForm] string? libelle)
     {
-        var facture = await db.Factures.FindAsync(id);
+        var userId = User.GetUserId();
+        var facture = await db.Factures.FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
         if (facture == null) return NotFound();
 
         if (file == null || file.Length == 0)
@@ -340,20 +335,15 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
             return BadRequest("Formats acceptés : PDF, JPG, PNG.");
         }
 
-        var uploadDir = Path.Combine(config["Uploads:BasePath"] ?? "uploads", "factures", "pieces-jointes");
-        Directory.CreateDirectory(uploadDir);
         var originalName = Path.GetFileName(file.FileName);
-        var fileName = $"{Guid.NewGuid()}-{originalName}";
-        var filePath = Path.Combine(uploadDir, fileName);
-
-        await using (var stream = System.IO.File.Create(filePath))
-            await file.CopyToAsync(stream);
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
 
         var piece = new PieceJointe
         {
             FactureId = id,
             NomFichier = originalName,
-            CheminFichier = filePath,
+            Data = ms.ToArray(),
             ContentType = file.ContentType,
             TailleOctets = file.Length,
             Libelle = string.IsNullOrWhiteSpace(libelle) ? null : libelle.Trim()
@@ -367,7 +357,8 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpGet("{id}/pieces-jointes")]
     public async Task<ActionResult<List<PieceJointeDto>>> GetPiecesJointes(int id)
     {
-        if (!await db.Factures.AnyAsync(f => f.Id == id))
+        var userId = User.GetUserId();
+        if (!await db.Factures.AnyAsync(f => f.Id == id && f.UserId == userId))
             return NotFound();
 
         var pieces = await db.PiecesJointes
@@ -382,27 +373,29 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpGet("{id}/pieces-jointes/{pieceId}")]
     public async Task<IActionResult> GetPieceJointe(int id, int pieceId)
     {
+        var userId = User.GetUserId();
         var piece = await db.PiecesJointes
             .AsNoTracking()
+            .Where(p => p.Facture!.UserId == userId)
             .FirstOrDefaultAsync(p => p.Id == pieceId && p.FactureId == id);
-        if (piece == null || !System.IO.File.Exists(piece.CheminFichier))
+        if (piece == null)
             return NotFound();
 
-        var stream = System.IO.File.OpenRead(piece.CheminFichier);
         // Pas de nom de fichier => Content-Disposition: inline, prévisualisation directe (image/PDF) côté front
-        return File(stream, piece.ContentType);
+        return File(piece.Data, piece.ContentType);
     }
 
     [HttpDelete("{id}/pieces-jointes/{pieceId}")]
     public async Task<IActionResult> DeletePieceJointe(int id, int pieceId)
     {
-        var piece = await db.PiecesJointes.FirstOrDefaultAsync(p => p.Id == pieceId && p.FactureId == id);
+        var userId = User.GetUserId();
+        var piece = await db.PiecesJointes
+            .Where(p => p.Facture!.UserId == userId)
+            .FirstOrDefaultAsync(p => p.Id == pieceId && p.FactureId == id);
         if (piece == null) return NotFound();
 
         db.PiecesJointes.Remove(piece);
         await db.SaveChangesAsync();
-
-        try { System.IO.File.Delete(piece.CheminFichier); } catch { /* best effort */ }
 
         return NoContent();
     }
@@ -420,6 +413,10 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpGet("{id}/echanges")]
     public async Task<ActionResult<List<LlmExchangeDto>>> GetEchanges(int id)
     {
+        var userId = User.GetUserId();
+        if (!await db.Factures.AnyAsync(f => f.Id == id && f.UserId == userId))
+            return NotFound();
+
         var echanges = await db.LlmExchanges
             .Where(e => e.TypeDocument == TypeDocument.Facture && e.DocumentId == id)
             .OrderBy(e => e.Batch)
@@ -444,7 +441,7 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         TotalTtc = f.TotalTtc,
         Statut = f.Statut.ToString(),
         CreatedAt = f.CreatedAt,
-        HasPdf = !string.IsNullOrEmpty(f.FichierPdfPath) && System.IO.File.Exists(f.FichierPdfPath),
+        HasPdf = f.FichierPdfData != null,
         Entreprise = f.Entreprise == null ? null : new EntrepriseDto
         {
             Id = f.Entreprise.Id,

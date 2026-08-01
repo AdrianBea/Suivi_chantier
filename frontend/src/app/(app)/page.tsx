@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ErrorState, LoadState } from "@/components/LoadState";
 import { api } from "@/lib/api";
 import { formatDateLong, formatEurCompact, formatEurRounded } from "@/lib/format";
-import { DevisDto, FactureDto, TYPE_LOT_LABELS, TYPE_LOT_VALUES } from "@/lib/types";
+import { DevisDto, FactureDto, TYPE_LOT_LABELS, TYPE_LOT_VALUES, UserDto } from "@/lib/types";
 import { useParallax } from "@/lib/useParallax";
 
 const LOTS_ORDER = TYPE_LOT_VALUES.map((t) => TYPE_LOT_LABELS[t]);
@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [devis, setDevis] = useState<DevisDto[]>([]);
   const [factures, setFactures] = useState<FactureDto[]>([]);
   const [lmOk, setLmOk] = useState<boolean | null>(null);
+  const [user, setUser] = useState<UserDto | null>(null);
   const donutRef = useRef<SVGCircleElement>(null);
   const budgetBarRef = useRef<HTMLDivElement>(null);
   const lotBarsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -37,7 +38,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     load();
-    api.settings.test().then((r) => setLmOk(r.success)).catch(() => setLmOk(false));
+    api.auth.me().then((u) => {
+      setUser(u);
+      if (u.isAdmin) api.settings.test().then((r) => setLmOk(r.success)).catch(() => setLmOk(false));
+    }).catch(() => setUser(null));
   }, []);
 
   // KPI derivations
@@ -115,25 +119,28 @@ export default function Dashboard() {
         <div ref={heroRef} className="parallax-layer" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28, animation: "fadeUp 0.5s 0.05s ease both" }}>
           <div>
             <div style={{ fontSize: 10, letterSpacing: "0.18em", color: "var(--nm-accent)", textTransform: "uppercase", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 8 }}>Tableau de bord · Le Point Travaux</div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.01em" }}>Maison individuelle — Construction neuve</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.01em" }}>{user?.adresse || "Maison individuelle — Construction neuve"}</h1>
             <div style={{ fontSize: 13, color: "var(--nm-text-muted)", marginTop: 5 }}>
+              {(user?.nom || user?.prenom) && `${user.prenom ?? ""} ${user.nom ?? ""}`.trim() + " · "}
               {devis.length + factures.length > 0
                 ? `${devis.length + factures.length} documents · ${devis.length} devis · ${factures.length} factures`
                 : "Aucun document importé"}
             </div>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border)", borderRadius: 6, padding: "6px 12px" }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", background: lmOk ? "var(--nm-success)" : lmOk === false ? "var(--nm-danger)" : "var(--nm-text-muted)", boxShadow: lmOk ? "0 0 6px 1px color-mix(in srgb, var(--nm-success) 55%, transparent)" : "none" }} />
-              <span style={{ fontSize: 12, color: "var(--nm-text-muted)" }}>OpenRouter {lmOk === null ? "…" : lmOk ? "connecté" : "déconnecté"}</span>
-            </div>
+            {user?.isAdmin && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border)", borderRadius: 6, padding: "6px 12px" }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: lmOk ? "var(--nm-success)" : lmOk === false ? "var(--nm-danger)" : "var(--nm-text-muted)", boxShadow: lmOk ? "0 0 6px 1px color-mix(in srgb, var(--nm-success) 55%, transparent)" : "none" }} />
+                <span style={{ fontSize: 12, color: "var(--nm-text-muted)" }}>OpenRouter {lmOk === null ? "…" : lmOk ? "connecté" : "déconnecté"}</span>
+              </div>
+            )}
             <div style={{ background: "var(--nm-base-raised)", border: "1px solid var(--nm-border)", borderRadius: 8, padding: "8px 14px", textAlign: "right" }}>
               <div style={{ fontSize: 10, color: "var(--nm-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Début chantier</div>
-              <div style={{ fontSize: 13, fontFamily: "var(--font-jetbrains-mono)", color: "var(--nm-text-tertiary)", marginTop: 2 }}>Mars 2026</div>
+              <div style={{ fontSize: 13, fontFamily: "var(--font-jetbrains-mono)", color: "var(--nm-text-tertiary)", marginTop: 2 }}>{user?.dateDebutChantier ? fmtDate(user.dateDebutChantier) : "—"}</div>
             </div>
             <div style={{ background: "var(--nm-base-raised)", border: "1px solid var(--nm-border)", borderRadius: 8, padding: "8px 14px", textAlign: "right" }}>
               <div style={{ fontSize: 10, color: "var(--nm-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Livraison estimée</div>
-              <div style={{ fontSize: 13, fontFamily: "var(--font-jetbrains-mono)", color: "var(--nm-text-tertiary)", marginTop: 2 }}>Déc. 2026</div>
+              <div style={{ fontSize: 13, fontFamily: "var(--font-jetbrains-mono)", color: "var(--nm-text-tertiary)", marginTop: 2 }}>{user?.dateLivraisonPrevue ? fmtDate(user.dateLivraisonPrevue) : "—"}</div>
             </div>
           </div>
         </div>

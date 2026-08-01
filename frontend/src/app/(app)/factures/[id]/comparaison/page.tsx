@@ -26,7 +26,7 @@ export default function ComparaisonPage() {
   if (error) return <main className="max-w-6xl mx-auto px-4 py-10" style={{ color: "var(--nm-danger)" }}>{error}</main>;
   if (!data) return null;
 
-  const ecart = data.ecartTotalHt;
+  const ecart = data.ecartTotalTtc;
   const ecartSignificatif = Math.abs(ecart) > 0.01;
 
   return (
@@ -37,15 +37,15 @@ export default function ComparaisonPage() {
 
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div style={{ padding: 16, borderRadius: 8, border: "1px solid var(--nm-border)", background: "var(--nm-base)" }}>
-          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Total HT devis</p>
-          <p style={{ fontSize: 18, fontWeight: 700, color: "var(--nm-text-secondary)" }}>{formatEur(data.totalHtDevis)}</p>
+          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Total TTC devis</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: "var(--nm-text-secondary)" }}>{formatEur(data.totalTtcDevis)}</p>
         </div>
         <div style={{ padding: 16, borderRadius: 8, border: "1px solid var(--nm-border)", background: "var(--nm-base)" }}>
-          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Total HT facture</p>
-          <p style={{ fontSize: 18, fontWeight: 700, color: "var(--nm-text-secondary)" }}>{formatEur(data.totalHtFacture)}</p>
+          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Total TTC facture</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: "var(--nm-text-secondary)" }}>{formatEur(data.totalTtcFacture)}</p>
         </div>
         <div style={{ padding: 16, borderRadius: 8, border: `1px solid ${ecartSignificatif ? "var(--nm-danger-border)" : "var(--nm-success)"}`, background: ecartSignificatif ? "var(--nm-danger-bg)" : "var(--nm-success-bg)" }}>
-          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Écart total HT</p>
+          <p style={{ fontSize: 12, color: "var(--nm-text-faint)", marginBottom: 4 }}>Écart total TTC</p>
           <p style={{ fontSize: 18, fontWeight: 700, color: ecartSignificatif ? "var(--nm-danger)" : "var(--nm-success)" }}>
             {ecart > 0 ? "+" : ""}{formatEur(ecart)}
           </p>

@@ -3,6 +3,8 @@ namespace backend.Models;
 public class Entreprise
 {
     public int Id { get; set; }
+    public int UserId { get; set; }
+    public User? User { get; set; }
     public string Nom { get; set; } = string.Empty;
     public string? Siret { get; set; }
     public string? ContactNom { get; set; }

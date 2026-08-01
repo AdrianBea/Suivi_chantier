@@ -3,20 +3,31 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { TestResultDto } from "@/lib/types";
+import { TestResultDto, UserDto } from "@/lib/types";
 
-const CARD: React.CSSProperties = { background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: "28px 28px" };
-const LABEL: React.CSSProperties = { fontSize: 11, color: "var(--nm-text-muted)", letterSpacing: "0.08em", textTransform: "uppercase" as const, fontFamily: "var(--font-jetbrains-mono)", marginBottom: 8, display: "block" };
-const INPUT: React.CSSProperties = { width: "100%", background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "var(--font-jetbrains-mono)" };
+const CARD_PAD = 28;
+const SECTION_GAP = 28;
+const FIELD_GAP = 20;
+const LABEL_GAP = 8;
+const FIELD_PAD = "10px 12px";
+
+const CARD: React.CSSProperties = { background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 10, padding: CARD_PAD };
+const CARD_TITLE: React.CSSProperties = { fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 22 };
+const LABEL: React.CSSProperties = { fontSize: 11, color: "var(--nm-text-muted)", letterSpacing: "0.08em", textTransform: "uppercase" as const, fontFamily: "var(--font-jetbrains-mono)", marginBottom: LABEL_GAP, display: "block" };
+const FIELD: React.CSSProperties = { width: "100%", background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: FIELD_PAD, fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "var(--font-jetbrains-mono)" };
+const INPUT: React.CSSProperties = FIELD;
+const SELECT: React.CSSProperties = FIELD;
+const BTN: React.CSSProperties = { padding: "10px 24px", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "inherit" };
+const BTN_GHOST: React.CSSProperties = { ...BTN, padding: "9px 16px", background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", fontSize: 12, color: "var(--nm-text-secondary)", whiteSpace: "nowrap" as const };
+const RESULT_TEXT: React.CSSProperties = { fontSize: 12, fontFamily: "var(--font-jetbrains-mono)" };
 
 export default function ParametresPage() {
-  const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState("");
-  const [models, setModels] = useState<string[]>([]);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [modelsError, setModelsError] = useState<string | null>(null);
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<TestResultDto | null>(null);
+  const [user, setUser] = useState<UserDto | null>(null);
+  const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
+  const [adresse, setAdresse] = useState("");
+  const [dateDebutChantier, setDateDebutChantier] = useState("");
+  const [dateLivraisonPrevue, setDateLivraisonPrevue] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -25,35 +36,77 @@ export default function ParametresPage() {
   const [resetting, setResetting] = useState(false);
   const [resetResult, setResetResult] = useState<TestResultDto | null>(null);
 
+  const [model, setModel] = useState("");
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [savingModel, setSavingModel] = useState(false);
+  const [modelSaveResult, setModelSaveResult] = useState<TestResultDto | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<TestResultDto | null>(null);
+
   useEffect(() => {
-    api.settings.get()
-      .then((s) => {
-        setApiKey(s.apiKey);
-        setModel(s.model);
+    api.auth.me()
+      .then((u) => {
+        setUser(u);
+        setNom(u.nom ?? "");
+        setPrenom(u.prenom ?? "");
+        setAdresse(u.adresse ?? "");
+        setDateDebutChantier(u.dateDebutChantier ?? "");
+        setDateLivraisonPrevue(u.dateLivraisonPrevue ?? "");
+        if (u.isAdmin) {
+          api.settings.get()
+            .then((s) => setModel(s.model))
+            .catch(() => {});
+        }
       })
       .catch((e) => setLoadError(e instanceof Error ? e.message : "Impossible de joindre le backend"))
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleSave() {
-    setSaving(true); setSaveError(null); setSaveSuccess(false); setTestResult(null);
+  async function handleLoadModels() {
+    setLoadingModels(true); setModelSaveResult(null);
+    try {
+      const { models } = await api.settings.getModels();
+      setAvailableModels(models);
+    } catch (e) {
+      setModelSaveResult({ success: false, message: e instanceof Error ? e.message : "Erreur inconnue" });
+    } finally { setLoadingModels(false); }
+  }
+
+  async function handleSaveModel() {
+    setSavingModel(true); setModelSaveResult(null);
     try {
       await api.settings.update(model);
+      setModelSaveResult({ success: true, message: "Modèle enregistré." });
+    } catch (e) {
+      setModelSaveResult({ success: false, message: e instanceof Error ? e.message : "Erreur lors de l'enregistrement" });
+    } finally { setSavingModel(false); }
+  }
+
+  async function handleTest() {
+    setTesting(true); setTestResult(null);
+    try {
+      setTestResult(await api.settings.test());
+    } catch (e) {
+      setTestResult({ success: false, message: e instanceof Error ? e.message : "Erreur inconnue" });
+    } finally { setTesting(false); }
+  }
+
+  async function handleSave() {
+    setSaving(true); setSaveError(null); setSaveSuccess(false);
+    try {
+      const updated = await api.auth.updateMe({
+        nom: nom.trim() || null,
+        prenom: prenom.trim() || null,
+        adresse: adresse.trim() || null,
+        dateDebutChantier: dateDebutChantier || null,
+        dateLivraisonPrevue: dateLivraisonPrevue || null,
+      });
+      setUser(updated);
       setSaveSuccess(true);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "Erreur lors de l'enregistrement");
     } finally { setSaving(false); }
-  }
-
-  async function handleRefreshModels() {
-    setLoadingModels(true); setModelsError(null);
-    try {
-      const data = await api.settings.getModels();
-      setModels(data.models);
-      if (data.models.length > 0 && !data.models.includes(model)) setModel(data.models[0]);
-    } catch (e) {
-      setModelsError(e instanceof Error ? e.message : "Impossible de récupérer les modèles");
-    } finally { setLoadingModels(false); }
   }
 
   async function handleReset() {
@@ -67,99 +120,137 @@ export default function ParametresPage() {
     } finally { setResetting(false); }
   }
 
-  async function handleTest() {
-    setTesting(true); setTestResult(null);
-    try {
-      setTestResult(await api.settings.test());
-    } catch (e) {
-      setTestResult({ success: false, message: e instanceof Error ? e.message : "Erreur inconnue" });
-    } finally { setTesting(false); }
-  }
-
   const body = (
     <div style={{ fontFamily: "inherit" }}>
       <style>{`@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} } *{box-sizing:border-box}`}</style>
 
       {/* BODY */}
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "36px 40px 64px" }}>
-        <div style={{ marginBottom: 28, animation: "fadeUp 0.5s 0.05s ease both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "0.18em", color: "var(--nm-accent)", textTransform: "uppercase", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 8 }}>Configuration · Le Point Travaux</div>
+        <div style={{ marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.05s ease both" }}>
+          <div style={{ fontSize: 10, letterSpacing: "0.18em", color: "var(--nm-accent)", textTransform: "uppercase", fontFamily: "var(--font-jetbrains-mono)", marginBottom: LABEL_GAP }}>Configuration · Le Point Travaux</div>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "-0.01em" }}>Paramètres</h1>
-          <p style={{ fontSize: 13, color: "var(--nm-text-muted)", marginTop: 5 }}>Connexion OpenRouter</p>
+          <p style={{ fontSize: 13, color: "var(--nm-text-muted)", marginTop: 5 }}>Profil et chantier</p>
         </div>
 
-        {/* Warning */}
-        <div style={{ background: "var(--nm-accent-soft-bg)", border: "1px solid var(--nm-accent-soft-bg)", borderRadius: 8, padding: "12px 16px", marginBottom: 24, fontSize: 12, color: "var(--nm-accent-soft-text)", animation: "fadeUp 0.5s 0.1s ease both" }}>
-          Les modifications prennent effet immédiatement, sans redémarrage du serveur. La clé API n&apos;est plus modifiable depuis cette page ; changez-la dans <code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>backend/.env</code> puis redémarrez le backend.
-        </div>
+        {/* Profil */}
+        <div style={{ ...CARD, marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.15s ease both" }}>
+          <div style={CARD_TITLE}>Profil</div>
 
-        {/* OpenRouter */}
-        <div style={{ ...CARD, marginBottom: 28, animation: "fadeUp 0.5s 0.15s ease both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 22 }}>Fournisseur LLM</div>
-
-          <div style={{ marginBottom: 18 }}>
-            <label htmlFor="param-apikey" style={LABEL}>Clé API</label>
-            <input id="param-apikey" style={{ ...INPUT, color: "var(--nm-text-muted)", cursor: "not-allowed" }} type="text" value={apiKey} readOnly disabled />
-            <p style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: 6 }}>Non modifiable ici — définie dans <code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>backend/.env</code>.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: FIELD_GAP, marginBottom: FIELD_GAP }}>
+            <div>
+              <label htmlFor="param-nom" style={LABEL}>Nom</label>
+              <input id="param-nom" style={INPUT} type="text" value={nom} onChange={(e) => setNom(e.target.value)} />
+            </div>
+            <div>
+              <label htmlFor="param-prenom" style={LABEL}>Prénom</label>
+              <input id="param-prenom" style={INPUT} type="text" value={prenom} onChange={(e) => setPrenom(e.target.value)} />
+            </div>
           </div>
 
           <div>
-            <label htmlFor="param-model" style={LABEL}>Modèle actif</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <select
-                id="param-model"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                style={{ ...INPUT, flex: 1, cursor: "pointer" }}
-              >
-                {model && !models.includes(model) && <option value={model}>{model}</option>}
-                {models.map((m) => <option key={m} value={m}>{m}</option>)}
-                {models.length === 0 && !model && <option value="" disabled>— charger la liste —</option>}
-              </select>
-              <Btn onClick={handleRefreshModels} disabled={loadingModels}>{loadingModels ? "…" : "↻ Rafraîchir"}</Btn>
-              <Btn onClick={handleTest} disabled={testing}>{testing ? "Test…" : "Tester"}</Btn>
+            <label htmlFor="param-adresse" style={LABEL}>Adresse du chantier</label>
+            <input id="param-adresse" style={INPUT} type="text" value={adresse} onChange={(e) => setAdresse(e.target.value)} />
+          </div>
+        </div>
+
+        {/* Chantier */}
+        <div style={{ ...CARD, marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.2s ease both" }}>
+          <div style={CARD_TITLE}>Dates du chantier</div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: FIELD_GAP }}>
+            <div>
+              <label htmlFor="param-debut" style={LABEL}>Début chantier</label>
+              <input id="param-debut" style={INPUT} type="date" value={dateDebutChantier} onChange={(e) => setDateDebutChantier(e.target.value)} />
             </div>
-            {modelsError && <p style={{ fontSize: 11, color: "var(--nm-danger)", marginTop: 6 }}>{modelsError}</p>}
-            {testResult && (
-              <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 6, fontSize: 12, fontFamily: "var(--font-jetbrains-mono)", background: testResult.success ? "var(--nm-success-bg)" : "var(--nm-danger-bg)", border: `1px solid ${testResult.success ? "var(--nm-success)" : "var(--nm-danger-border)"}`, color: testResult.success ? "var(--nm-success)" : "var(--nm-danger)" }}>
-                {testResult.success ? "✓ " : "✗ "}{testResult.message}
-              </div>
-            )}
+            <div>
+              <label htmlFor="param-livraison" style={LABEL}>Livraison prévue</label>
+              <input id="param-livraison" style={INPUT} type="date" value={dateLivraisonPrevue} onChange={(e) => setDateLivraisonPrevue(e.target.value)} />
+            </div>
           </div>
         </div>
 
         {/* Save */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14, animation: "fadeUp 0.5s 0.25s ease both" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.25s ease both" }}>
           <button
             onClick={handleSave}
             disabled={saving}
-            style={{ padding: "10px 24px", background: saving ? "var(--nm-accent-hover)" : "var(--nm-accent)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, color: "var(--nm-text-on-accent)", cursor: saving ? "not-allowed" : "pointer", transition: "background 0.15s" }}
+            style={{ ...BTN, background: saving ? "var(--nm-accent-hover)" : "var(--nm-accent)", border: "none", color: "var(--nm-text-on-accent)", cursor: saving ? "not-allowed" : "pointer", transition: "background 0.15s" }}
           >
             {saving ? "Enregistrement…" : "Enregistrer"}
           </button>
-          {saveSuccess && <span style={{ fontSize: 12, color: "var(--nm-success)", fontFamily: "var(--font-jetbrains-mono)" }}>✓ Paramètres sauvegardés</span>}
-          {saveError && <span style={{ fontSize: 12, color: "var(--nm-danger)", fontFamily: "var(--font-jetbrains-mono)" }}>✗ {saveError}</span>}
+          {saveSuccess && <span style={{ ...RESULT_TEXT, color: "var(--nm-success)" }}>✓ Paramètres sauvegardés</span>}
+          {saveError && <span style={{ ...RESULT_TEXT, color: "var(--nm-danger)" }}>✗ {saveError}</span>}
         </div>
 
-        {/* Zone dangereuse */}
-        <div style={{ ...CARD, marginTop: 28, borderColor: "var(--nm-danger-border)", animation: "fadeUp 0.5s 0.3s ease both" }}>
-          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-danger)", fontFamily: "var(--font-jetbrains-mono)", marginBottom: 14 }}>Zone dangereuse</div>
-          <p style={{ fontSize: 12, color: "var(--nm-text-muted)", marginBottom: 16 }}>Supprime définitivement tous les devis, factures et entreprises. La configuration est conservée.</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button
-              onClick={handleReset}
-              disabled={resetting}
-              style={{ padding: "10px 24px", background: resetting ? "var(--nm-danger-border)" : "var(--nm-danger-bg)", border: "1px solid var(--nm-danger)", borderRadius: 8, fontSize: 13, fontWeight: 600, color: "var(--nm-text-on-accent)", cursor: resetting ? "not-allowed" : "pointer" }}
-            >
-              {resetting ? "Suppression…" : "RAZ toute la base"}
-            </button>
-            {resetResult && (
-              <span style={{ fontSize: 12, fontFamily: "var(--font-jetbrains-mono)", color: resetResult.success ? "var(--nm-success)" : "var(--nm-danger)" }}>
-                {resetResult.success ? "✓ " : "✗ "}{resetResult.message}
-              </span>
-            )}
+        {/* IA / OpenRouter — admin uniquement */}
+        {user?.isAdmin && (
+          <div style={{ ...CARD, marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.25s ease both" }}>
+            <div style={CARD_TITLE}>IA · OpenRouter</div>
+
+            <div style={{ marginBottom: FIELD_GAP }}>
+              <label htmlFor="param-model" style={LABEL}>Modèle</label>
+              <div style={{ display: "flex", gap: 10 }}>
+                {availableModels.length > 0 ? (
+                  <select id="param-model" style={SELECT} value={model} onChange={(e) => setModel(e.target.value)}>
+                    {!availableModels.includes(model) && <option value={model}>{model}</option>}
+                    {availableModels.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                ) : (
+                  <input id="param-model" style={INPUT} type="text" value={model} onChange={(e) => setModel(e.target.value)} />
+                )}
+                <button
+                  onClick={handleLoadModels}
+                  disabled={loadingModels}
+                  style={{ ...BTN_GHOST, cursor: loadingModels ? "not-allowed" : "pointer" }}
+                >
+                  {loadingModels ? "Chargement…" : "Lister les modèles"}
+                </button>
+              </div>
+              <p style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: LABEL_GAP }}>La clé API se configure dans <code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>backend/.env</code>.</p>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button
+                onClick={handleSaveModel}
+                disabled={savingModel}
+                style={{ ...BTN, background: savingModel ? "var(--nm-accent-hover)" : "var(--nm-accent)", border: "none", color: "var(--nm-text-on-accent)", cursor: savingModel ? "not-allowed" : "pointer" }}
+              >
+                {savingModel ? "Enregistrement…" : "Enregistrer le modèle"}
+              </button>
+              <button
+                onClick={handleTest}
+                disabled={testing}
+                style={{ ...BTN, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", color: "var(--nm-text-secondary)", cursor: testing ? "not-allowed" : "pointer" }}
+              >
+                {testing ? "Test…" : "Tester la connexion"}
+              </button>
+              {modelSaveResult && <span style={{ ...RESULT_TEXT, color: modelSaveResult.success ? "var(--nm-success)" : "var(--nm-danger)" }}>{modelSaveResult.success ? "✓ " : "✗ "}{modelSaveResult.message}</span>}
+              {testResult && <span style={{ ...RESULT_TEXT, color: testResult.success ? "var(--nm-success)" : "var(--nm-danger)" }}>{testResult.success ? "✓ " : "✗ "}{testResult.message}</span>}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Zone dangereuse — admin uniquement */}
+        {user?.isAdmin && (
+          <div style={{ ...CARD, borderColor: "var(--nm-danger-border)", animation: "fadeUp 0.5s 0.3s ease both" }}>
+            <div style={{ ...CARD_TITLE, color: "var(--nm-danger)", marginBottom: 14 }}>Zone dangereuse</div>
+            <p style={{ fontSize: 12, color: "var(--nm-text-muted)", marginBottom: 16 }}>Supprime définitivement tous les devis, factures et entreprises. La configuration est conservée.</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button
+                onClick={handleReset}
+                disabled={resetting}
+                style={{ ...BTN, background: resetting ? "var(--nm-danger-border)" : "var(--nm-danger-bg)", border: "1px solid var(--nm-danger)", color: "var(--nm-text-on-accent)", cursor: resetting ? "not-allowed" : "pointer" }}
+              >
+                {resetting ? "Suppression…" : "RAZ toute la base"}
+              </button>
+              {resetResult && (
+                <span style={{ ...RESULT_TEXT, color: resetResult.success ? "var(--nm-success)" : "var(--nm-danger)" }}>
+                  {resetResult.success ? "✓ " : "✗ "}{resetResult.message}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -180,16 +271,4 @@ export default function ParametresPage() {
   );
 
   return body;
-}
-
-function Btn({ onClick, disabled, children }: { onClick: () => void; disabled?: boolean; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{ padding: "9px 14px", background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, fontSize: 12, color: disabled ? "var(--nm-text-disabled)" : "var(--nm-text-tertiary)", fontFamily: "var(--font-jetbrains-mono)", cursor: disabled ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}
-    >
-      {children}
-    </button>
-  );
 }

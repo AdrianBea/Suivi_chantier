@@ -10,15 +10,14 @@ namespace backend.Services;
 
 public interface IExtractionService
 {
-    Task<Devis> CreateDevisEntryAsync(string pdfPath);
-    void StartDevisExtraction(int devisId, string pdfPath, ExtractionMode mode);
-    Task<Facture> CreateFactureEntryAsync(string pdfPath, int? devisId);
-    void StartFactureExtraction(int factureId, string pdfPath, ExtractionMode mode);
+    Task<Devis> CreateDevisEntryAsync(byte[] pdfData, string pdfNom, int userId);
+    void StartDevisExtraction(int devisId, ExtractionMode mode);
+    Task<Facture> CreateFactureEntryAsync(byte[] pdfData, string pdfNom, int userId, int? devisId);
+    void StartFactureExtraction(int factureId, ExtractionMode mode);
 }
 
 public class ExtractionService(
     AppDbContext db,
-    IConfiguration config,
     IServiceScopeFactory scopeFactory,
     ISettingsStore settingsStore,
     ILogger<ExtractionService> logger) : IExtractionService
@@ -46,9 +45,7 @@ public class ExtractionService(
             "date_devis": null,
             "date_validite": null,
             "delai_execution": null,
-            "total_ht": null,
             "tva_taux": null,
-            "tva_montant": null,
             "total_ttc": null
           },
           "lignes": [
@@ -65,6 +62,7 @@ public class ExtractionService(
 
         Rules:
         - All monetary values are numbers (no currency symbols).
+        - "total_ttc" is the final amount including tax (TTC / "Net à payer" / "Total TTC") for the whole document. If several totals appear, take the grand total, not a subtotal or an intermediate page total.
         - Dates are ISO 8601 (YYYY-MM-DD).
         - If a field is absent, use null — never omit the key.
         - "type_lot" must be exactly one of these values (or null if none clearly applies): TERRASSEMENT_VRD, GROS_OEUVRE, CHARPENTE_COUVERTURE, MENUISERIE, PLATRERIE, PLOMBERIE_SANITAIRE, ELECTRICITE, ISOLATION_AU_SOL, CHAUFFAGE, CHAPE_LIQUIDE, CARRELAGE, ISOLATION_DES_COMBLES, FACADES, PERMIS, MAITRISE_OEUVRE.
@@ -89,9 +87,7 @@ public class ExtractionService(
             "type_lot": null,
             "date_facture": null,
             "date_echeance": null,
-            "total_ht": null,
             "tva_taux": null,
-            "tva_montant": null,
             "total_ttc": null
           },
           "lignes": [
@@ -108,17 +104,20 @@ public class ExtractionService(
 
         Rules:
         - All monetary values are numbers (no currency symbols).
+        - "total_ttc" is the final amount including tax (TTC / "Net à payer" / "Total TTC") for the whole document. If several totals appear, take the grand total, not a subtotal or an intermediate page total.
         - Dates are ISO 8601 (YYYY-MM-DD).
         - If a field is absent, use null — never omit the key.
         - "type_lot" must be exactly one of these values (or null if none clearly applies): TERRASSEMENT_VRD, GROS_OEUVRE, CHARPENTE_COUVERTURE, MENUISERIE, PLATRERIE, PLOMBERIE_SANITAIRE, ELECTRICITE, ISOLATION_AU_SOL, CHAUFFAGE, CHAPE_LIQUIDE, CARRELAGE, ISOLATION_DES_COMBLES, FACADES, PERMIS, MAITRISE_OEUVRE.
         - Return JSON only. No other text.
         """;
 
-    public async Task<Devis> CreateDevisEntryAsync(string pdfPath)
+    public async Task<Devis> CreateDevisEntryAsync(byte[] pdfData, string pdfNom, int userId)
     {
         var devis = new Devis
         {
-            FichierPdfPath = pdfPath,
+            UserId = userId,
+            FichierPdfData = pdfData,
+            FichierPdfNom = pdfNom,
             Statut = StatutExtraction.EnAttente
         };
         db.Devis.Add(devis);
@@ -126,12 +125,12 @@ public class ExtractionService(
         return devis;
     }
 
-    public void StartDevisExtraction(int devisId, string pdfPath, ExtractionMode mode)
+    public void StartDevisExtraction(int devisId, ExtractionMode mode)
     {
-        _ = Task.Run(() => RunDevisExtractionAsync(devisId, pdfPath, mode));
+        _ = Task.Run(() => RunDevisExtractionAsync(devisId, mode));
     }
 
-    private async Task RunDevisExtractionAsync(int devisId, string pdfPath, ExtractionMode mode)
+    private async Task RunDevisExtractionAsync(int devisId, ExtractionMode mode)
     {
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -139,18 +138,17 @@ public class ExtractionService(
         var openRouterService = scope.ServiceProvider.GetRequiredService<IOpenRouterService>();
 
         var devis = await db.Devis.FirstOrDefaultAsync(d => d.Id == devisId);
-        if (devis == null) return;
+        if (devis == null || devis.FichierPdfData == null) return;
+        var pdfData = devis.FichierPdfData;
 
         try
         {
-            var tmpDir = Path.Combine(config["Uploads:BasePath"] ?? "uploads", "tmp", Guid.NewGuid().ToString());
-
             // Mode texte : extraire la couche texte ; si vide/scanné -> fallback image.
             List<string> textPages = [];
             if (mode == ExtractionMode.Texte)
             {
-                try { textPages = pdfImageService.ExtractTextPages(pdfPath); }
-                catch (Exception ex) { logger.LogWarning(ex, "Extraction texte échouée pour {PdfPath}, fallback image", pdfPath); }
+                try { textPages = pdfImageService.ExtractTextPages(pdfData); }
+                catch (Exception ex) { logger.LogWarning(ex, "Extraction texte échouée pour devis {DevisId}, fallback image", devisId); }
 
                 if (textPages.Sum(p => p.Count(c => !char.IsWhiteSpace(c))) < MinTextChars)
                 {
@@ -159,10 +157,10 @@ public class ExtractionService(
                 }
             }
 
-            var imagePaths = mode == ExtractionMode.Image
-                ? await pdfImageService.ConvertToImagesAsync(pdfPath, tmpDir)
+            var images = mode == ExtractionMode.Image
+                ? await pdfImageService.ConvertToImagesAsync(pdfData)
                 : [];
-            var pageCount = mode == ExtractionMode.Image ? imagePaths.Count : textPages.Count;
+            var pageCount = mode == ExtractionMode.Image ? images.Count : textPages.Count;
 
             // send pages in batches of 4 to avoid context overflow
             var allLignes = new List<JsonNode>();
@@ -177,7 +175,7 @@ public class ExtractionService(
                 int nbPages;
                 if (mode == ExtractionMode.Image)
                 {
-                    var batch = imagePaths.Skip(i).Take(4).ToList();
+                    var batch = images.Skip(i).Take(4).ToList();
                     nbPages = batch.Count;
                     call = await openRouterService.ExtractStructuredJsonAsync(batch, DevisSystemPrompt, userPrompt);
                 }
@@ -208,7 +206,11 @@ public class ExtractionService(
                 if (parsed != null)
                 {
                     if (i == 0) entrepriseNode = parsed["entreprise"];
-                    lastDevisNode = parsed["devis"];
+                    // ponytail: on ne remplace le noeud devis que si le batch apporte un TTC,
+                    // sinon un dernier batch sans bloc total ecraserait le montant deja trouve.
+                    var devisNode = parsed["devis"];
+                    if (lastDevisNode == null || devisNode?["total_ttc"] is not null)
+                        lastDevisNode = devisNode;
                     if (parsed["lignes"] is JsonArray lignesArr)
                         allLignes.AddRange(lignesArr.OfType<JsonNode>());
                 }
@@ -222,6 +224,7 @@ public class ExtractionService(
             {
                 var entreprise = await EntrepriseResolver.ResolveAsync(
                     db,
+                    devis.UserId,
                     nom: entrepriseNode["nom"]?.GetValue<string>(),
                     siret: entrepriseNode["siret"]?.GetValue<string>(),
                     contactNom: entrepriseNode["contact_nom"]?.GetValue<string>(),
@@ -260,36 +263,31 @@ public class ExtractionService(
             db.LignesPoste.AddRange(lignes);
             devis.Lignes = lignes;
 
-            // les totaux viennent du LLM (HT + TTC), source de vérité ; les lignes sont informatives et ne pilotent plus le total.
+            // seul le TTC vient du LLM, source de vérité ; HT et montant de TVA se saisissent à la main.
             if (lastDevisNode != null)
-            {
-                devis.TotalHt = ParseDecimal(lastDevisNode["total_ht"]);
                 devis.TotalTtc = ParseDecimal(lastDevisNode["total_ttc"]);
-                devis.TvaMontant = devis.TotalTtc - devis.TotalHt;
-            }
 
             // aucune donnée exploitable => réponse LLM vide ou tronquée (souvent contexte trop court)
             devis.Statut = (lignes.Count == 0 && lastDevisNode == null && entrepriseNode == null)
                 ? StatutExtraction.Erreur
                 : StatutExtraction.Extrait;
             await db.SaveChangesAsync();
-
-            // cleanup temp images
-            try { Directory.Delete(tmpDir, recursive: true); } catch { /* best effort */ }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Extraction failed for {PdfPath}", pdfPath);
+            logger.LogError(ex, "Extraction failed for devis {DevisId}", devisId);
             devis.Statut = StatutExtraction.Erreur;
             await db.SaveChangesAsync();
         }
     }
 
-    public async Task<Facture> CreateFactureEntryAsync(string pdfPath, int? devisId)
+    public async Task<Facture> CreateFactureEntryAsync(byte[] pdfData, string pdfNom, int userId, int? devisId)
     {
         var facture = new Facture
         {
-            FichierPdfPath = pdfPath,
+            UserId = userId,
+            FichierPdfData = pdfData,
+            FichierPdfNom = pdfNom,
             Statut = StatutExtraction.EnAttente,
             DevisId = devisId
         };
@@ -298,12 +296,12 @@ public class ExtractionService(
         return facture;
     }
 
-    public void StartFactureExtraction(int factureId, string pdfPath, ExtractionMode mode)
+    public void StartFactureExtraction(int factureId, ExtractionMode mode)
     {
-        _ = Task.Run(() => RunFactureExtractionAsync(factureId, pdfPath, mode));
+        _ = Task.Run(() => RunFactureExtractionAsync(factureId, mode));
     }
 
-    private async Task RunFactureExtractionAsync(int factureId, string pdfPath, ExtractionMode mode)
+    private async Task RunFactureExtractionAsync(int factureId, ExtractionMode mode)
     {
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -311,18 +309,17 @@ public class ExtractionService(
         var openRouterService = scope.ServiceProvider.GetRequiredService<IOpenRouterService>();
 
         var facture = await db.Factures.FirstOrDefaultAsync(f => f.Id == factureId);
-        if (facture == null) return;
+        if (facture == null || facture.FichierPdfData == null) return;
+        var pdfData = facture.FichierPdfData;
 
         try
         {
-            var tmpDir = Path.Combine(config["Uploads:BasePath"] ?? "uploads", "tmp", Guid.NewGuid().ToString());
-
             // Mode texte : extraire la couche texte ; si vide/scanné -> fallback image.
             List<string> textPages = [];
             if (mode == ExtractionMode.Texte)
             {
-                try { textPages = pdfImageService.ExtractTextPages(pdfPath); }
-                catch (Exception ex) { logger.LogWarning(ex, "Extraction texte échouée pour {PdfPath}, fallback image", pdfPath); }
+                try { textPages = pdfImageService.ExtractTextPages(pdfData); }
+                catch (Exception ex) { logger.LogWarning(ex, "Extraction texte échouée pour facture {FactureId}, fallback image", factureId); }
 
                 if (textPages.Sum(p => p.Count(c => !char.IsWhiteSpace(c))) < MinTextChars)
                 {
@@ -331,10 +328,10 @@ public class ExtractionService(
                 }
             }
 
-            var imagePaths = mode == ExtractionMode.Image
-                ? await pdfImageService.ConvertToImagesAsync(pdfPath, tmpDir)
+            var images = mode == ExtractionMode.Image
+                ? await pdfImageService.ConvertToImagesAsync(pdfData)
                 : [];
-            var pageCount = mode == ExtractionMode.Image ? imagePaths.Count : textPages.Count;
+            var pageCount = mode == ExtractionMode.Image ? images.Count : textPages.Count;
 
             var allLignes = new List<JsonNode>();
             var rawResponses = new List<string>();
@@ -348,7 +345,7 @@ public class ExtractionService(
                 int nbPages;
                 if (mode == ExtractionMode.Image)
                 {
-                    var batch = imagePaths.Skip(i).Take(4).ToList();
+                    var batch = images.Skip(i).Take(4).ToList();
                     nbPages = batch.Count;
                     call = await openRouterService.ExtractStructuredJsonAsync(batch, FactureSystemPrompt, userPrompt);
                 }
@@ -379,7 +376,11 @@ public class ExtractionService(
                 if (parsed != null)
                 {
                     if (i == 0) entrepriseNode = parsed["entreprise"];
-                    lastFactureNode = parsed["facture"];
+                    // ponytail: on ne remplace le noeud facture que si le batch apporte un TTC,
+                    // sinon un dernier batch sans bloc total ecraserait le montant deja trouve.
+                    var factureNode = parsed["facture"];
+                    if (lastFactureNode == null || factureNode?["total_ttc"] is not null)
+                        lastFactureNode = factureNode;
                     if (parsed["lignes"] is JsonArray lignesArr)
                         allLignes.AddRange(lignesArr.OfType<JsonNode>());
                 }
@@ -393,6 +394,7 @@ public class ExtractionService(
             {
                 var entreprise = await EntrepriseResolver.ResolveAsync(
                     db,
+                    facture.UserId,
                     nom: entrepriseNode["nom"]?.GetValue<string>(),
                     siret: entrepriseNode["siret"]?.GetValue<string>(),
                     contactNom: entrepriseNode["contact_nom"]?.GetValue<string>(),
@@ -429,25 +431,19 @@ public class ExtractionService(
             db.LignesFacture.AddRange(lignes);
             facture.Lignes = lignes;
 
-            // les totaux viennent du LLM (HT + TTC), source de vérité ; les lignes sont informatives et ne pilotent plus le total.
+            // seul le TTC vient du LLM, source de vérité ; HT et montant de TVA se saisissent à la main.
             if (lastFactureNode != null)
-            {
-                facture.TotalHt = ParseDecimal(lastFactureNode["total_ht"]);
                 facture.TotalTtc = ParseDecimal(lastFactureNode["total_ttc"]);
-                facture.TvaMontant = facture.TotalTtc - facture.TotalHt;
-            }
 
             // aucune donnée exploitable => réponse LLM vide ou tronquée (souvent contexte trop court)
             facture.Statut = (lignes.Count == 0 && lastFactureNode == null && entrepriseNode == null)
                 ? StatutExtraction.Erreur
                 : StatutExtraction.Extrait;
             await db.SaveChangesAsync();
-
-            try { Directory.Delete(tmpDir, recursive: true); } catch { /* best effort */ }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Extraction failed for {PdfPath}", pdfPath);
+            logger.LogError(ex, "Extraction failed for facture {FactureId}", factureId);
             facture.Statut = StatutExtraction.Erreur;
             await db.SaveChangesAsync();
         }

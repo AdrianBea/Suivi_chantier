@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Modal } from "@/components/Modal";
 import { api } from "@/lib/api";
 import { DevisDto, FactureDto } from "@/lib/types";
@@ -22,7 +22,6 @@ type QueueEntry = {
   factureId?: number;
   entreprise?: string;
   lot?: string;
-  montantHT?: number;
   montantTTC?: number;
   date?: string;
   lignesCount?: number;
@@ -49,6 +48,14 @@ function statusLabel(s: QueueEntry["status"]) {
 // ─── component ───────────────────────────────────────────────────────────────
 
 export default function ImportPage() {
+  return (
+    <Suspense>
+      <ImportPageInner />
+    </Suspense>
+  );
+}
+
+function ImportPageInner() {
   const searchParams = useSearchParams();
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -96,7 +103,6 @@ export default function ImportPage() {
       error: d.statut === "Erreur" ? "Extraction échouée" : undefined,
       entreprise: d.entreprise?.nom,
       lot: d.lot ?? undefined,
-      montantHT: d.totalHt ?? undefined,
       montantTTC: d.totalTtc ?? undefined,
       date: d.dateDevis ? new Date(d.dateDevis).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : undefined,
       lignesCount: d.lignes.length,
@@ -110,7 +116,6 @@ export default function ImportPage() {
       status: f.statut === "Extrait" ? "extracted" : "error",
       error: f.statut === "Erreur" ? "Extraction échouée" : undefined,
       entreprise: f.entreprise?.nom,
-      montantHT: f.totalHt ?? undefined,
       montantTTC: f.totalTtc ?? undefined,
       date: f.dateFacture ? new Date(f.dateFacture).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : undefined,
       lignesCount: f.lignes.length,
@@ -281,8 +286,7 @@ export default function ImportPage() {
                       <>
                         <span style={{ color: "var(--nm-text-muted)" }}>{entry.entreprise}</span>
                         {entry.lot && <><span style={{ color: "var(--nm-text-disabled)" }}>·</span><span>{entry.lot}</span></>}
-                        {entry.montantHT != null && <><span style={{ color: "var(--nm-text-disabled)" }}>·</span><span style={{ fontFamily: "monospace", color: "var(--nm-text-tertiary)" }}>{fmt(entry.montantHT)} HT</span></>}
-                        {entry.montantTTC != null && <><span style={{ color: "var(--nm-text-disabled)" }}>·</span><span style={{ fontFamily: "monospace", color: "var(--nm-text-tertiary)" }}>{fmt(entry.montantTTC)} TTC</span></>}
+                        {entry.montantTTC != null &&<><span style={{ color: "var(--nm-text-disabled)" }}>·</span><span style={{ fontFamily: "monospace", color: "var(--nm-text-tertiary)" }}>{fmt(entry.montantTTC)} TTC</span></>}
                       </>
                     )}
                   </div>
@@ -329,11 +333,7 @@ export default function ImportPage() {
                   <div style={{ fontSize: 9, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 5 }}>Date</div>
                   <div style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "monospace" }}>{selected.date ?? "—"}</div>
                 </div>
-                <div style={{ background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border)", borderTop: "2px solid var(--nm-accent)", borderRadius: 8, padding: "11px 13px" }}>
-                  <div style={{ fontSize: 9, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 5 }}>Montant HT extrait</div>
-                  <div style={{ fontSize: 22, color: "var(--nm-text-primary)", fontWeight: 700, fontFamily: "monospace", letterSpacing: "-0.02em" }}>{fmt(selected.montantHT)}</div>
-                </div>
-                <div style={{ background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border)", borderTop: "2px solid var(--nm-accent)", borderRadius: 8, padding: "11px 13px" }}>
+                <div style={{ gridColumn: "1 / -1", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border)", borderTop: "2px solid var(--nm-accent)", borderRadius: 8, padding: "11px 13px" }}>
                   <div style={{ fontSize: 9, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 5 }}>Montant TTC extrait</div>
                   <div style={{ fontSize: 22, color: "var(--nm-text-primary)", fontWeight: 700, fontFamily: "monospace", letterSpacing: "-0.02em" }}>{fmt(selected.montantTTC)}</div>
                 </div>

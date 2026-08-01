@@ -9,7 +9,7 @@ public record LlmCallResult(string Content, int DureeMs, bool Succes, string? Er
 
 public interface IOpenRouterService
 {
-    Task<LlmCallResult> ExtractStructuredJsonAsync(List<string> imagePaths, string systemPrompt, string userPrompt);
+    Task<LlmCallResult> ExtractStructuredJsonAsync(List<byte[]> images, string systemPrompt, string userPrompt);
     Task<LlmCallResult> ExtractStructuredJsonFromTextAsync(List<string> pageTexts, string systemPrompt, string userPrompt);
 }
 
@@ -17,16 +17,15 @@ public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsSt
 {
     internal const string BaseUrl = "https://openrouter.ai/api/v1";
 
-    public async Task<LlmCallResult> ExtractStructuredJsonAsync(
-        List<string> imagePaths,
+    public Task<LlmCallResult> ExtractStructuredJsonAsync(
+        List<byte[]> images,
         string systemPrompt,
         string userPrompt)
     {
         var contentParts = new List<object>();
 
-        foreach (var path in imagePaths)
+        foreach (var bytes in images)
         {
-            var bytes = await File.ReadAllBytesAsync(path);
             var base64 = Convert.ToBase64String(bytes);
             contentParts.Add(new
             {
@@ -37,7 +36,7 @@ public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsSt
 
         contentParts.Add(new { type = "text", text = userPrompt });
 
-        return await SendAsync(systemPrompt, contentParts);
+        return SendAsync(systemPrompt, contentParts);
     }
 
     public async Task<LlmCallResult> ExtractStructuredJsonFromTextAsync(

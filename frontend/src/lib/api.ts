@@ -1,9 +1,15 @@
-import { ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, LignePosteUpsertDto, LlmExchangeDto, OpenRouterModelsDto, OpenRouterSettingsDto, PieceJointeDto, TestResultDto } from "./types";
+import { ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, LignePosteUpsertDto, LlmExchangeDto, OpenRouterModelsDto, OpenRouterSettingsDto, PieceJointeDto, TestResultDto, UpdateProfileDto, UserDto } from "./types";
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5096";
+// Same-origin: rewrites in next.config.ts proxy /api/* to the backend so the
+// ASP.NET auth cookie (scoped to this origin) travels with every request.
+export const API_BASE = "";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
+  const res = await fetch(`${API_BASE}${path}`, { ...init, credentials: "include" });
+  if (res.status === 401 && typeof window !== "undefined") {
+    window.location.href = "/login";
+    throw new Error("Session expirée.");
+  }
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || `Erreur ${res.status}`);
@@ -13,6 +19,40 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  auth: {
+    signup: (
+      email: string,
+      password: string,
+      passwordConfirmation: string,
+      dateDebutChantier: string | null,
+      dateLivraisonPrevue: string | null,
+    ) =>
+      request<UserDto>("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          passwordConfirmation,
+          dateDebutChantier,
+          dateLivraisonPrevue,
+        }),
+      }),
+    login: (email: string, password: string) =>
+      request<UserDto>("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      }),
+    logout: () => request<void>("/api/auth/logout", { method: "POST" }),
+    me: () => request<UserDto>("/api/auth/me"),
+    updateMe: (dto: UpdateProfileDto) =>
+      request<UserDto>("/api/auth/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dto),
+      }),
+  },
   devis: {
     list: (params?: { lot?: string; statut?: string; page?: number }) => {
       const qs = new URLSearchParams();

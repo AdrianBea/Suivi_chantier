@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import Nav from "@/components/Nav";
-import ThemeToggle from "@/components/ThemeToggle";
+import UserMenu from "@/components/UserMenu";
 
 export default function TopBar() {
   return (
@@ -11,7 +11,7 @@ export default function TopBar() {
         <span style={{ fontSize: 14, fontWeight: 700, color: "var(--nm-text-primary)", letterSpacing: "0.02em" }}>Le Point Travaux</span>
       </Link>
       <Nav />
-      <ThemeToggle />
+      <UserMenu />
     </header>
   );
 }

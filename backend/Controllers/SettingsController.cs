@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using backend.Data;
 using backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("api/settings")]
+[Authorize(Policy = "AdminOnly")]
 public class SettingsController(ISettingsStore settingsStore, IHttpClientFactory httpClientFactory, AppDbContext db) : ControllerBase
 {
     [HttpGet]

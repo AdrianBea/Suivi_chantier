@@ -24,6 +24,8 @@ public enum TypeLot
 public class Devis
 {
     public int Id { get; set; }
+    public int UserId { get; set; }
+    public User? User { get; set; }
     public int? EntrepriseId { get; set; }
     public Entreprise? Entreprise { get; set; }
     public string? NumeroDevis { get; set; }
@@ -37,7 +39,8 @@ public class Devis
     public decimal? TvaMontant { get; set; }
     public decimal? TotalTtc { get; set; }
     public StatutExtraction Statut { get; set; } = StatutExtraction.EnAttente;
-    public string? FichierPdfPath { get; set; }
+    public byte[]? FichierPdfData { get; set; }
+    public string? FichierPdfNom { get; set; }
     public string? ExtractionBrute { get; set; }
     public string? ReponseBrute { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

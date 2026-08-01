@@ -7,9 +7,12 @@ namespace backend.Services;
 public static class EntrepriseResolver
 {
     // Résout une entreprise à partir d'un nom et/ou d'un SIRET : matche par SIRET si fourni,
-    // sinon par nom (insensible à la casse), sinon crée une nouvelle ligne. Retourne null si ni nom ni siret.
+    // sinon par nom (insensible à la casse). La création est réservée aux fiches complètes
+    // (nom ET siret) : un nom seul rattache à une entreprise existante ou retourne null,
+    // à charge de l'utilisateur de rattacher le document à la main.
     public static async Task<Entreprise?> ResolveAsync(
         AppDbContext db,
+        int userId,
         string? nom,
         string? siret = null,
         string? contactNom = null,
@@ -22,17 +25,18 @@ public static class EntrepriseResolver
         if (nom == null && siret == null) return null;
 
         Entreprise? entreprise = siret != null
-            ? await db.Entreprises.FirstOrDefaultAsync(e => e.Siret == siret)
+            ? await db.Entreprises.FirstOrDefaultAsync(e => e.UserId == userId && e.Siret == siret)
             : null;
 
         if (entreprise == null && nom != null)
-            entreprise = await db.Entreprises.FirstOrDefaultAsync(e => e.Nom.ToLower() == nom.ToLower());
+            entreprise = await db.Entreprises.FirstOrDefaultAsync(e => e.UserId == userId && e.Nom.ToLower() == nom.ToLower());
 
-        if (entreprise == null)
+        if (entreprise == null && nom != null && siret != null)
         {
             entreprise = new Entreprise
             {
-                Nom = nom ?? "Inconnu",
+                UserId = userId,
+                Nom = nom,
                 Siret = siret,
                 ContactNom = contactNom,
                 ContactTel = contactTel,
