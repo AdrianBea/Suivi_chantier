@@ -24,8 +24,8 @@ export function ListPageHeader({ eyebrow, title, subtitle, actions }: {
 export function StatGrid({ stats }: { stats: { label: string; value: string; color: string; small?: boolean }[] }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: `repeat(${stats.length},1fr)`, gap: 12, marginBottom: 22 }}>
-      {stats.map(({ label, value, color, small }) => (
-        <div key={label} className="nm-card" style={{ padding: "16px 18px" }}>
+      {stats.map(({ label, value, color, small }, i) => (
+        <div key={label} className="nm-card nm-row-in" style={{ padding: "16px 18px", animationDelay: `${i * 40}ms` }}>
           <div style={{ fontSize: 10, color: "var(--nm-text-muted)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>{label}</div>
           <div style={{ fontSize: small ? 18 : 26, fontWeight: 700, fontFamily: "monospace", color, letterSpacing: small ? "-0.02em" : undefined }}>{value}</div>
         </div>

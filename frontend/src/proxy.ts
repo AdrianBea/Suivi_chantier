@@ -9,6 +9,11 @@ const publicPaths = ["/login", "/signup"];
 // passera ici et sera rattrapé par le 401 dans lib/api.ts.
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (process.env.MAINTENANCE_MODE === "true" && pathname !== "/maintenance") {
+    return NextResponse.rewrite(new URL("/maintenance", request.url));
+  }
+
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
   const hasSession = request.cookies.has(AUTH_COOKIE);
 
@@ -22,5 +27,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|logo.svg).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|.*\\.(?:ico|svg|png|jpg|jpeg|webp)$).*)"],
 };

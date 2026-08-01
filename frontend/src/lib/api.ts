@@ -79,7 +79,7 @@ export const api = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dto),
       }),
-    import: (file: File, mode: string = "Image") => {
+    import: (file: File, mode: string = "Texte") => {
       const form = new FormData();
       form.append("file", file);
       form.append("mode", mode);
@@ -131,7 +131,7 @@ export const api = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dto),
       }),
-    import: (file: File, devisId?: number, mode: string = "Image") => {
+    import: (file: File, devisId?: number, mode: string = "Texte") => {
       const form = new FormData();
       form.append("file", file);
       form.append("mode", mode);

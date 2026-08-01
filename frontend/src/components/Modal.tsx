@@ -5,11 +5,13 @@ import { useEffect, useRef } from "react";
 export function Modal({
   onClose,
   width = 480,
+  height,
   titleId,
   children,
 }: {
   onClose: () => void;
   width?: number;
+  height?: number;
   titleId: string;
   children: React.ReactNode;
 }) {
@@ -40,13 +42,14 @@ export function Modal({
         borderRadius: "var(--nm-radius-lg)",
         width,
         maxWidth: "95vw",
+        height,
         maxHeight: "88vh",
         padding: 0,
         color: "var(--nm-text-primary)",
         boxShadow: "-10px -10px 24px var(--nm-shadow-light), 14px 14px 32px var(--nm-shadow-dark), 0 24px 60px rgba(0,0,0,0.35)",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", maxHeight: "88vh", overflow: "hidden" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: height ? "100%" : undefined, maxHeight: "88vh", overflow: "hidden" }}>
         {children}
       </div>
     </dialog>

@@ -143,7 +143,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
 
   return (
     <>
-      <Modal onClose={onClose} width={showPdf ? 1420 : 900} titleId="devis-modal-title">
+      <Modal onClose={onClose} width={showPdf ? 1420 : 900} height={840} titleId="devis-modal-title">
           {/* header */}
           <div style={{ padding: "20px 28px", borderBottom: "1px solid var(--nm-border)", display: "flex", alignItems: "center", gap: 14, flexShrink: 0, background: "var(--nm-base-raised)" }}>
             <div style={{ flex: 1, minWidth: 0 }}>

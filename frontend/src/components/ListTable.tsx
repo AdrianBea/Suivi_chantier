@@ -19,7 +19,7 @@ export function ListTable<T>({ columns, rows, rowKey, onRowClick, renderRow, emp
           </div>
           {rows.length === 0 ? (
             <div style={{ padding: 40, textAlign: "center", color: "var(--nm-text-faint)", fontSize: 13 }}>{emptyLabel}</div>
-          ) : rows.map((row) => (
+          ) : rows.map((row, i) => (
             <div
               key={rowKey(row)}
               role="button"
@@ -31,7 +31,8 @@ export function ListTable<T>({ columns, rows, rowKey, onRowClick, renderRow, emp
                   onRowClick(row);
                 }
               }}
-              style={{ display: "grid", gridTemplateColumns, padding: "0 20px", borderBottom: "1px solid var(--nm-border)", cursor: "pointer", transition: "background-color 180ms ease-out" }}
+              className="nm-row-in"
+              style={{ display: "grid", gridTemplateColumns, padding: "0 20px", borderBottom: "1px solid var(--nm-border)", cursor: "pointer", transition: "background-color 180ms ease-out", animationDelay: `${Math.min(i, 20) * 25}ms` }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "var(--nm-base-sunken)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >

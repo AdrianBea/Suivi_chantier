@@ -249,6 +249,15 @@ dialog {
   animation: fadeIn 220ms ease-out both;
 }
 
+.nm-row-in {
+  animation: nm-row-in 0.5s ease both;
+}
+
+@keyframes nm-row-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

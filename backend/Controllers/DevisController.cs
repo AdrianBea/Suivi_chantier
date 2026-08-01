@@ -27,7 +27,7 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
 
-        var extractionMode = Enum.TryParse<ExtractionMode>(mode, true, out var m) ? m : ExtractionMode.Image;
+        var extractionMode = Enum.TryParse<ExtractionMode>(mode, true, out var m) ? m : ExtractionMode.Texte;
         var devis = await extractionService.CreateDevisEntryAsync(ms.ToArray(), Path.GetFileName(file.FileName), User.GetUserId());
         extractionService.StartDevisExtraction(devis.Id, extractionMode);
         return CreatedAtAction(nameof(GetById), new { id = devis.Id }, MapToDto(devis));

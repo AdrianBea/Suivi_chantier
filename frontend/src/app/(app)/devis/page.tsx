@@ -9,7 +9,7 @@ import { ListTable } from "@/components/ListTable";
 import { ErrorState, LoadState } from "@/components/LoadState";
 import { api } from "@/lib/api";
 import { formatDate, formatEur } from "@/lib/format";
-import { DevisDto, TYPE_LOT_COLORS, TYPE_LOT_LABELS } from "@/lib/types";
+import { DevisDto, TYPE_LOT_COLORS, TYPE_LOT_LABELS, TYPE_LOT_VALUES } from "@/lib/types";
 
 const COLUMNS = [
   { label: "Type de lot", width: "150px" },
@@ -29,6 +29,7 @@ export default function DevisPage() {
   const [devis, setDevis] = useState<DevisDto[]>([]);
   const [search, setSearch] = useState("");
   const [filterStatut, setFilterStatut] = useState("all");
+  const [filterTypeLot, setFilterTypeLot] = useState("all");
   const [selected, setSelected] = useState<DevisDto | null>(null);
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -56,6 +57,7 @@ export default function DevisPage() {
   const q = search.trim().toLowerCase();
   const filtered = devis.filter((d) => {
     if (filterStatut !== "all" && d.statut !== filterStatut) return false;
+    if (filterTypeLot !== "all" && d.typeLot !== filterTypeLot) return false;
     if (q && !( (d.numeroDevis ?? "").toLowerCase().includes(q) || (d.entreprise?.nom ?? "").toLowerCase().includes(q) || (d.lot ?? "").toLowerCase().includes(q) )) return false;
     return true;
   });
@@ -112,6 +114,18 @@ export default function DevisPage() {
               </button>
             );
           })}
+          <select
+            value={filterTypeLot}
+            onChange={(e) => setFilterTypeLot(e.target.value)}
+            aria-label="Filtrer par lot"
+            className="nm-input"
+            style={{ padding: "8px 12px", fontSize: 12, fontFamily: "inherit", maxWidth: 220 }}
+          >
+            <option value="all">Tous les lots</option>
+            {TYPE_LOT_VALUES.map((v) => (
+              <option key={v} value={v}>{TYPE_LOT_LABELS[v]}</option>
+            ))}
+          </select>
         </div>
 
         <ListTable

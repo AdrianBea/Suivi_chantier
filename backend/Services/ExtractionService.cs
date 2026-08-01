@@ -46,6 +46,8 @@ public class ExtractionService(
             "date_validite": null,
             "delai_execution": null,
             "tva_taux": null,
+            "total_ht": null,
+            "tva_montant": null,
             "total_ttc": null
           },
           "lignes": [
@@ -63,6 +65,8 @@ public class ExtractionService(
         Rules:
         - All monetary values are numbers (no currency symbols).
         - "total_ttc" is the final amount including tax (TTC / "Net à payer" / "Total TTC") for the whole document. If several totals appear, take the grand total, not a subtotal or an intermediate page total.
+        - "total_ht" is the total before tax (HT / "Total HT") for the whole document, and "tva_montant" is the total VAT amount (montant de TVA). Read them directly from the document — do not compute them yourself.
+        - "total_ht", "tva_montant" and "total_ttc" must be rounded to exactly 2 decimal places.
         - Dates are ISO 8601 (YYYY-MM-DD).
         - If a field is absent, use null — never omit the key.
         - "type_lot" must be exactly one of these values (or null if none clearly applies): TERRASSEMENT_VRD, GROS_OEUVRE, CHARPENTE_COUVERTURE, MENUISERIE, PLATRERIE, PLOMBERIE_SANITAIRE, ELECTRICITE, ISOLATION_AU_SOL, CHAUFFAGE, CHAPE_LIQUIDE, CARRELAGE, ISOLATION_DES_COMBLES, FACADES, PERMIS, MAITRISE_OEUVRE.
@@ -88,6 +92,8 @@ public class ExtractionService(
             "date_facture": null,
             "date_echeance": null,
             "tva_taux": null,
+            "total_ht": null,
+            "tva_montant": null,
             "total_ttc": null
           },
           "lignes": [
@@ -105,6 +111,8 @@ public class ExtractionService(
         Rules:
         - All monetary values are numbers (no currency symbols).
         - "total_ttc" is the final amount including tax (TTC / "Net à payer" / "Total TTC") for the whole document. If several totals appear, take the grand total, not a subtotal or an intermediate page total.
+        - "total_ht" is the total before tax (HT / "Total HT") for the whole document, and "tva_montant" is the total VAT amount (montant de TVA). Read them directly from the document — do not compute them yourself.
+        - "total_ht", "tva_montant" and "total_ttc" must be rounded to exactly 2 decimal places.
         - Dates are ISO 8601 (YYYY-MM-DD).
         - If a field is absent, use null — never omit the key.
         - "type_lot" must be exactly one of these values (or null if none clearly applies): TERRASSEMENT_VRD, GROS_OEUVRE, CHARPENTE_COUVERTURE, MENUISERIE, PLATRERIE, PLOMBERIE_SANITAIRE, ELECTRICITE, ISOLATION_AU_SOL, CHAUFFAGE, CHAPE_LIQUIDE, CARRELAGE, ISOLATION_DES_COMBLES, FACADES, PERMIS, MAITRISE_OEUVRE.
@@ -226,35 +234,36 @@ public class ExtractionService(
                 var entreprise = await EntrepriseResolver.ResolveAsync(
                     db,
                     devis.UserId,
-                    nom: entrepriseNode["nom"]?.GetValue<string>(),
-                    siret: entrepriseNode["siret"]?.GetValue<string>(),
-                    contactNom: entrepriseNode["contact_nom"]?.GetValue<string>(),
-                    contactTel: entrepriseNode["contact_tel"]?.GetValue<string>(),
-                    contactEmail: entrepriseNode["contact_email"]?.GetValue<string>(),
-                    adresse: entrepriseNode["adresse"]?.GetValue<string>());
+                    nom: ParseString(entrepriseNode["nom"]),
+                    siret: ParseString(entrepriseNode["siret"]),
+                    contactNom: ParseString(entrepriseNode["contact_nom"]),
+                    contactTel: ParseString(entrepriseNode["contact_tel"]),
+                    contactEmail: ParseString(entrepriseNode["contact_email"]),
+                    adresse: ParseString(entrepriseNode["adresse"]));
 
                 devis.EntrepriseId = entreprise?.Id;
             }
 
             if (lastDevisNode != null)
             {
-                devis.NumeroDevis = lastDevisNode["numero"]?.GetValue<string>();
-                devis.Lot = lastDevisNode["lot"]?.GetValue<string>();
-                devis.TypeLot = ParseTypeLot(lastDevisNode["type_lot"]?.GetValue<string>());
-                devis.DateDevis = ParseDate(lastDevisNode["date_devis"]?.GetValue<string>());
-                devis.DateValidite = ParseDate(lastDevisNode["date_validite"]?.GetValue<string>());
-                devis.DelaiExecution = lastDevisNode["delai_execution"]?.GetValue<string>();
+                devis.NumeroDevis = ParseString(lastDevisNode["numero"]);
+                devis.Lot = ParseString(lastDevisNode["lot"]);
+                devis.TypeLot = ParseTypeLot(ParseString(lastDevisNode["type_lot"]));
+                devis.DateDevis = ParseDate(ParseString(lastDevisNode["date_devis"]));
+                devis.DateValidite = ParseDate(ParseString(lastDevisNode["date_validite"]));
+                devis.DelaiExecution = ParseString(lastDevisNode["delai_execution"]);
                 devis.TvaTaux = ParseDecimal(lastDevisNode["tva_taux"]);
             }
 
             var lignes = allLignes
+                .OfType<JsonObject>()
                 .Select((l, idx) => new LignePoste
                 {
                     DevisId = devis.Id,
-                    Ordre = l["ordre"]?.GetValue<int>() ?? idx + 1,
-                    Description = l["description"]?.GetValue<string>() ?? string.Empty,
+                    Ordre = ParseInt(l["ordre"]) ?? idx + 1,
+                    Description = ParseString(l["description"]) ?? string.Empty,
                     Quantite = ParseDecimal(l["quantite"]),
-                    Unite = l["unite"]?.GetValue<string>(),
+                    Unite = ParseString(l["unite"]),
                     PrixUnitaire = ParseDecimal(l["prix_unitaire"]),
                     TotalLigne = ParseDecimal(l["total_ligne"])
                 })
@@ -264,9 +273,13 @@ public class ExtractionService(
             db.LignesPoste.AddRange(lignes);
             devis.Lignes = lignes;
 
-            // seul le TTC vient du LLM, source de vérité ; HT et montant de TVA se saisissent à la main.
+            // total_ht, tva_montant et total_ttc viennent tous du LLM tels quels, aucun recalcul.
             if (lastDevisNode != null)
+            {
+                devis.TotalHt = ParseDecimal(lastDevisNode["total_ht"]);
+                devis.TvaMontant = ParseDecimal(lastDevisNode["tva_montant"]);
                 devis.TotalTtc = ParseDecimal(lastDevisNode["total_ttc"]);
+            }
 
             // aucune donnée exploitable => réponse LLM vide ou tronquée (souvent contexte trop court)
             devis.Statut = (lignes.Count == 0 && lastDevisNode == null && entrepriseNode == null)
@@ -397,33 +410,34 @@ public class ExtractionService(
                 var entreprise = await EntrepriseResolver.ResolveAsync(
                     db,
                     facture.UserId,
-                    nom: entrepriseNode["nom"]?.GetValue<string>(),
-                    siret: entrepriseNode["siret"]?.GetValue<string>(),
-                    contactNom: entrepriseNode["contact_nom"]?.GetValue<string>(),
-                    contactTel: entrepriseNode["contact_tel"]?.GetValue<string>(),
-                    contactEmail: entrepriseNode["contact_email"]?.GetValue<string>(),
-                    adresse: entrepriseNode["adresse"]?.GetValue<string>());
+                    nom: ParseString(entrepriseNode["nom"]),
+                    siret: ParseString(entrepriseNode["siret"]),
+                    contactNom: ParseString(entrepriseNode["contact_nom"]),
+                    contactTel: ParseString(entrepriseNode["contact_tel"]),
+                    contactEmail: ParseString(entrepriseNode["contact_email"]),
+                    adresse: ParseString(entrepriseNode["adresse"]));
 
                 facture.EntrepriseId = entreprise?.Id;
             }
 
             if (lastFactureNode != null)
             {
-                facture.NumeroFacture = lastFactureNode["numero"]?.GetValue<string>();
-                facture.TypeLot = ParseTypeLot(lastFactureNode["type_lot"]?.GetValue<string>());
-                facture.DateFacture = ParseDate(lastFactureNode["date_facture"]?.GetValue<string>());
-                facture.DateEcheance = ParseDate(lastFactureNode["date_echeance"]?.GetValue<string>());
+                facture.NumeroFacture = ParseString(lastFactureNode["numero"]);
+                facture.TypeLot = ParseTypeLot(ParseString(lastFactureNode["type_lot"]));
+                facture.DateFacture = ParseDate(ParseString(lastFactureNode["date_facture"]));
+                facture.DateEcheance = ParseDate(ParseString(lastFactureNode["date_echeance"]));
                 facture.TvaTaux = ParseDecimal(lastFactureNode["tva_taux"]);
             }
 
             var lignes = allLignes
+                .OfType<JsonObject>()
                 .Select((l, idx) => new LigneFacture
                 {
                     FactureId = facture.Id,
-                    Ordre = l["ordre"]?.GetValue<int>() ?? idx + 1,
-                    Description = l["description"]?.GetValue<string>() ?? string.Empty,
+                    Ordre = ParseInt(l["ordre"]) ?? idx + 1,
+                    Description = ParseString(l["description"]) ?? string.Empty,
                     Quantite = ParseDecimal(l["quantite"]),
-                    Unite = l["unite"]?.GetValue<string>(),
+                    Unite = ParseString(l["unite"]),
                     PrixUnitaire = ParseDecimal(l["prix_unitaire"]),
                     TotalLigne = ParseDecimal(l["total_ligne"])
                 })
@@ -433,9 +447,13 @@ public class ExtractionService(
             db.LignesFacture.AddRange(lignes);
             facture.Lignes = lignes;
 
-            // seul le TTC vient du LLM, source de vérité ; HT et montant de TVA se saisissent à la main.
+            // total_ht, tva_montant et total_ttc viennent tous du LLM tels quels, aucun recalcul.
             if (lastFactureNode != null)
+            {
+                facture.TotalHt = ParseDecimal(lastFactureNode["total_ht"]);
+                facture.TvaMontant = ParseDecimal(lastFactureNode["tva_montant"]);
                 facture.TotalTtc = ParseDecimal(lastFactureNode["total_ttc"]);
+            }
 
             // aucune donnée exploitable => réponse LLM vide ou tronquée (souvent contexte trop court)
             facture.Statut = (lignes.Count == 0 && lastFactureNode == null && entrepriseNode == null)
@@ -459,19 +477,57 @@ public class ExtractionService(
         cleaned = Regex.Replace(cleaned, @"```\s*$", "", RegexOptions.Multiline);
         cleaned = cleaned.Trim();
 
-        try { return JsonNode.Parse(cleaned); }
+        JsonNode? node;
+        try { node = ParseViaDocument(cleaned); }
         catch
         {
             // try to extract first {...} block
             var match = Regex.Match(cleaned, @"\{[\s\S]*\}");
+            node = null;
             if (match.Success)
             {
-                try { return JsonNode.Parse(match.Value); }
+                try { node = ParseViaDocument(match.Value); }
                 catch { /* on tente la réparation ci-dessous */ }
             }
             // réponse LLM tronquée (contexte insuffisant) : ferme les crochets/accolades
             // ouverts pour récupérer au moins les lignes complètes avant la coupure
-            return TryRepairTruncatedJson(cleaned);
+            node ??= TryRepairTruncatedJson(cleaned);
+        }
+
+        return node;
+    }
+
+    // JsonNode.Parse accepte un objet JSON avec des clés dupliquées, mais lève une
+    // ArgumentException dès le premier accès indexeur (JsonObject.InitializeDictionary).
+    // On passe donc par JsonDocument (tolérant) et on reconstruit nous-mêmes le JsonNode,
+    // en ne gardant que la dernière valeur par clé — même comportement que System.Text.Json standard.
+    private static JsonNode? ParseViaDocument(string json)
+    {
+        using var doc = JsonDocument.Parse(json);
+        return FromElement(doc.RootElement);
+    }
+
+    private static JsonNode? FromElement(JsonElement el)
+    {
+        switch (el.ValueKind)
+        {
+            case JsonValueKind.Object:
+                var obj = new JsonObject();
+                foreach (var prop in el.EnumerateObject())
+                    obj[prop.Name] = FromElement(prop.Value);
+                return obj;
+            case JsonValueKind.Array:
+                var arr = new JsonArray();
+                foreach (var item in el.EnumerateArray())
+                    arr.Add(FromElement(item));
+                return arr;
+            case JsonValueKind.Null:
+            case JsonValueKind.Undefined:
+                return null;
+            default:
+                // JsonValue.Create(el) garde une référence lazy vers le JsonDocument source ;
+                // Clone() détache l'élément pour qu'il survive au Dispose() du JsonDocument (using).
+                return JsonValue.Create(el.Clone());
         }
     }
 
@@ -502,7 +558,7 @@ public class ExtractionService(
         foreach (var open in stack)
             sb.Append(open == '{' ? '}' : ']');
 
-        try { return JsonNode.Parse(sb.ToString()); }
+        try { return ParseViaDocument(sb.ToString()); }
         catch { return null; }
     }
 
@@ -526,6 +582,36 @@ public class ExtractionService(
     {
         if (node == null) return null;
         try { return node.GetValue<decimal>(); }
-        catch { return null; }
+        catch
+        {
+            // le LLM renvoie parfois un nombre en texte (virgule française, espaces, %) au lieu d'un JSON number
+            var s = ParseString(node);
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            s = s.Replace(" ", "").Replace(" ", "").Replace("%", "").Replace(".", "").Replace(",", ".");
+            return decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : null;
+        }
+    }
+
+    private static int? ParseInt(JsonNode? node)
+    {
+        if (node == null) return null;
+        try { return node.GetValue<int>(); }
+        catch
+        {
+            var s = ParseString(node);
+            return int.TryParse(s, out var i) ? i : null;
+        }
+    }
+
+    private static string? ParseString(JsonNode? node)
+    {
+        if (node == null) return null;
+        try { return node.GetValue<string>(); }
+        catch
+        {
+            // le champ attendu en string arrive parfois en number/bool selon l'humeur du LLM
+            try { return node.ToJsonString().Trim('"'); }
+            catch { return null; }
+        }
     }
 }

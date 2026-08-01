@@ -63,7 +63,7 @@ function ImportPageInner() {
   const [defaultDocType, setDefaultDocType] = useState<DocType>(
     searchParams.get("type") === "FAC" ? "FAC" : "DEVIS"
   );
-  const [mode, setMode] = useState<"Image" | "Texte">("Image");
+  const [mode] = useState<"Image" | "Texte">("Texte");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selected = queue.find((e) => e.id === selectedId) ?? null;
@@ -197,16 +197,6 @@ function ImportPageInner() {
               </button>
             ))}
             <span style={{ fontSize: 12, color: "var(--nm-text-disabled)", alignSelf: "center", marginLeft: 4 }}>Type par défaut pour le glisser-déposer</span>
-          </div>
-
-          {/* mode selector */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-            {(["Image", "Texte"] as const).map((mo) => (
-              <button key={mo} onClick={() => setMode(mo)} style={{ padding: "5px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600, border: "1px solid", borderColor: mode === mo ? "var(--nm-accent)" : "var(--nm-border-strong)", background: mode === mo ? "rgba(249,115,22,0.1)" : "transparent", color: mode === mo ? "var(--nm-accent)" : "var(--nm-text-muted)", cursor: "pointer", fontFamily: "inherit" }}>
-                {mo}
-              </button>
-            ))}
-            <span style={{ fontSize: 12, color: "var(--nm-text-disabled)", alignSelf: "center", marginLeft: 4 }}>Traitement LLM — Texte bascule en Image si le PDF est scanné</span>
           </div>
 
           {/* Drop zone */}

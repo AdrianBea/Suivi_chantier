@@ -31,7 +31,7 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
 
-        var extractionMode = Enum.TryParse<ExtractionMode>(mode, true, out var m) ? m : ExtractionMode.Image;
+        var extractionMode = Enum.TryParse<ExtractionMode>(mode, true, out var m) ? m : ExtractionMode.Texte;
         var facture = await extractionService.CreateFactureEntryAsync(ms.ToArray(), Path.GetFileName(file.FileName), userId, devisId);
         extractionService.StartFactureExtraction(facture.Id, extractionMode);
         return CreatedAtAction(nameof(GetById), new { id = facture.Id }, MapToDto(facture));

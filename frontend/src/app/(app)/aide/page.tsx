@@ -50,16 +50,12 @@ const FAQ = [
     a: <>L&apos;analyse prend de quelques secondes à une minute selon le nombre de pages. La liste se rafraîchit toute seule. Si le statut passe à <B>Erreur</B>, le PDF est probablement illisible (scan de mauvaise qualité, fichier protégé) ou le service d&apos;IA est injoignable — voyez la question suivante.</>,
   },
   {
-    q: "Le voyant « OpenRouter » est rouge / l&apos;extraction échoue systématiquement",
-    a: <>L&apos;application délègue la lecture des PDF à un service d&apos;IA externe (OpenRouter). Si le voyant en haut du tableau de bord est rouge, aucune extraction ne peut aboutir. Un compte administrateur peut vérifier la connexion depuis <A href="/parametres">Paramètres → IA · OpenRouter → Tester la connexion</A>.</>,
+    q: "L'extraction échoue systématiquement, sur tous les documents",
+    a: <>L&apos;application délègue la lecture des PDF à un service d&apos;IA externe (OpenRouter). S&apos;il est injoignable, aucune extraction ne peut aboutir : tous les documents passent en <B>Erreur</B> quelques secondes après l&apos;import. Réessayez plus tard ; si le problème persiste, contactez la personne qui administre l&apos;application.</>,
   },
   {
     q: "Les montants extraits sont faux",
-    a: <>Corrigez-les à la main : ouvrez le document, cliquez sur <B>Modifier</B>, ajustez les lignes concernées puis enregistrez. Les totaux se recalculent à partir des lignes. Si l&apos;extraction est trop mauvaise pour être rattrapée, supprimez le document et réimportez-le en changeant de mode de traitement (voir plus bas).</>,
-  },
-  {
-    q: "Quelle différence entre le mode « Image » et le mode « Texte » ?",
-    a: <>Sur l&apos;écran d&apos;import, ces deux boutons changent la façon dont le PDF est transmis à l&apos;IA. <B>Image</B> convertit chaque page en image — c&apos;est le mode par défaut, le plus robuste, et le seul qui fonctionne sur des documents scannés. <B>Texte</B> envoie le texte du PDF, ce qui est plus rapide et plus précis sur les PDF générés par ordinateur ; il bascule automatiquement en Image si le PDF s&apos;avère être un scan.</>,
+    a: <>Corrigez-les à la main : ouvrez le document, cliquez sur <B>Modifier</B>, ajustez les lignes concernées puis enregistrez. Les totaux se recalculent à partir des lignes. Si l&apos;extraction est trop mauvaise pour être rattrapée, supprimez le document et réimportez-le.</>,
   },
   {
     q: "Comment lier une facture à un devis ?",

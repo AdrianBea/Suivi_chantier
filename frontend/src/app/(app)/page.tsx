@@ -296,7 +296,7 @@ export default function Dashboard() {
             return (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 1fr 160px 120px 100px", gap: 16, alignItems: "center", padding: "11px 0", borderBottom: "1px solid var(--nm-base-sunken)" }}>
                 <div style={{ width: 34, height: 34, borderRadius: 7, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: 9, fontFamily: "var(--font-jetbrains-mono)", fontWeight: 700, color: iconColor, letterSpacing: "0.05em" }}>{item._type}</span>
+                  <span style={{ fontSize: 9, fontFamily: "var(--font-jetbrains-mono)", fontWeight: 700, color: iconColor, letterSpacing: "0.05em" }}>{isDevis ? "DEVIS" : "FAC"}</span>
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <Link href={href} style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", textDecoration: "none" }}>{name}</Link>

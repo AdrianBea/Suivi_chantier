@@ -13,7 +13,7 @@ interface Props {
 export function PdfUploadForm({ onUpload, label = "Déposer un fichier PDF" }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<ExtractionMode>("Image");
+  const [mode] = useState<ExtractionMode>("Texte");
 
   const onDrop = useCallback(
     async (accepted: File[]) => {
@@ -40,31 +40,6 @@ export function PdfUploadForm({ onUpload, label = "Déposer un fichier PDF" }: P
 
   return (
     <div>
-      <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-        <span style={{ color: "var(--nm-text-muted)" }}>Traiter le document en :</span>
-        {(["Image", "Texte"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => setMode(m)}
-            disabled={loading}
-            className="pressable"
-            style={{
-              padding: "5px 12px",
-              borderRadius: "var(--nm-radius-sm)",
-              border: "none",
-              background: mode === m ? "var(--nm-base)" : "transparent",
-              boxShadow: mode === m ? "var(--nm-shadow-pressed-sm)" : "none",
-              color: mode === m ? "var(--nm-accent)" : "var(--nm-text-muted)",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.5 : 1,
-              transition: "background-color 180ms ease-out, box-shadow 180ms ease-out",
-            }}
-          >
-            {m}
-          </button>
-        ))}
-      </div>
       <div
         {...getRootProps()}
         style={{
