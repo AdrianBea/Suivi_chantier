@@ -42,14 +42,17 @@ namespace backend.Migrations
 
             // ponytail: backfill vers le plus ancien compte (celui promu admin manuellement après signup) —
             // les données pré-existantes n'avaient pas de propriétaire, on les rattache à l'admin d'origine.
-            // IMPORTANT : au moins un compte doit exister (POST /api/auth/signup) avant d'appliquer cette
-            // migration, sinon le backfill échoue explicitement ci-dessous plutôt que de laisser UserId NULL.
+            // Sur une base vierge il n'y a rien à rattacher : on ne bloque que s'il existe des lignes
+            // orphelines ET aucun compte pour les recevoir (sinon UserId NOT NULL serait impossible).
             migrationBuilder.Sql(
                 """
                 DO $$
                 BEGIN
-                    IF NOT EXISTS (SELECT 1 FROM "Users") THEN
-                        RAISE EXCEPTION 'AddUserIdToDomainEntities: aucun utilisateur trouvé — créez un compte (POST /api/auth/signup) avant d''appliquer cette migration.';
+                    IF NOT EXISTS (SELECT 1 FROM "Users")
+                       AND (EXISTS (SELECT 1 FROM "Entreprises")
+                            OR EXISTS (SELECT 1 FROM "Devis")
+                            OR EXISTS (SELECT 1 FROM "Factures")) THEN
+                        RAISE EXCEPTION 'AddUserIdToDomainEntities: des données existent sans aucun compte — créez un compte (POST /api/auth/signup) avant d''appliquer cette migration.';
                     END IF;
                 END $$;
 
