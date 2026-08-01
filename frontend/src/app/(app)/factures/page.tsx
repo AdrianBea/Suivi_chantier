@@ -145,7 +145,7 @@ export default function FacturesPage() {
               </div>
               <div style={{ padding: "13px 12px 13px 0", fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.numeroFacture ?? "—"}</div>
               <div style={{ padding: "13px 12px", minWidth: 0 }}>
-                <div style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.entreprise?.nom ?? "—"}</div>
+                <div style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.entreprise?.nom ?? (f.statut !== "Extrait" ? f.fichierPdfNom : undefined) ?? "—"}</div>
               </div>
               <div style={{ padding: "13px 12px", fontSize: 11, textAlign: "center", fontFamily: "monospace" }}>
                 {f.devisId ? <span style={{ color: "var(--nm-accent-hover)" }}>#{f.devisId}</span> : <span style={{ color: "var(--nm-text-disabled)" }}>—</span>}

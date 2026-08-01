@@ -19,7 +19,9 @@ builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // La connection string est fixée au démarrage via appsettings/.env (ConnectionStrings:Default).
 builder.Services.AddDbContext<AppDbContext>((sp, opt) =>
-    opt.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Default")));
+    opt.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("Default"),
+        // ponytail: Railway met la DB en veille après inactivité ; le retry absorbe le délai de réveil au lieu de faire échouer le 1er login.
+        npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 6, maxRetryDelay: TimeSpan.FromSeconds(10), errorCodesToAdd: null)));
 builder.Services.AddHttpClient("openrouter");
 builder.Services.AddTransient<IOpenRouterService, OpenRouterService>();
 
@@ -59,6 +61,10 @@ builder.Services.AddHttpLogging(o =>
 
 var app = builder.Build();
 
+#if DEBUG
+TextSanitizer.Demo();
+#endif
+
 using (var scope = app.Services.CreateScope())
 {
     scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
@@ -77,7 +83,7 @@ app.UseExceptionHandler(a => a.Run(async ctx =>
     var ex = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
     app.Logger.LogError(ex, "Unhandled exception on {Path}", ctx.Request.Path);
     ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
-    await ctx.Response.WriteAsync("Internal server error");
+    await ctx.Response.WriteAsync("Une erreur inattendue est survenue. Merci de réessayer.");
 }));
 
 app.UseCors("frontend");

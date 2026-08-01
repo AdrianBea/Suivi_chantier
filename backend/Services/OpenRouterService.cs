@@ -45,7 +45,10 @@ public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsSt
         string userPrompt)
     {
         // Mode texte : le message user est une simple string (format OpenAI standard, déjà validé par SettingsController.Test).
-        var userContent = userPrompt + "\n\n" + string.Join("\n\n--- page ---\n\n", pageTexts);
+        // Les coordonnées bancaires sont masquées ici : le filtre d'OpenRouter rejette sinon
+        // la requête en 403 [CREDIT_CARD], et elles ne servent pas à l'extraction.
+        var pagesMasquees = pageTexts.Select(TextSanitizer.Masquer);
+        var userContent = userPrompt + "\n\n" + string.Join("\n\n--- page ---\n\n", pagesMasquees);
         return await SendAsync(systemPrompt, userContent);
     }
 
@@ -95,6 +98,11 @@ public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsSt
                 logger.LogError(
                     "OpenRouter réponse en erreur ← statut={StatusCode} après {DureeMs}ms headers=[{Headers}] body={Body}",
                     (int)response.StatusCode, sw.ElapsedMilliseconds, headers, Truncate(errBody, 4000));
+
+                if (errBody.Contains("content filter", StringComparison.OrdinalIgnoreCase))
+                    logger.LogError(
+                        "OpenRouter a bloqué la requête via son filtre de contenu : le document envoyé contient "
+                        + "une séquence non masquée par TextSanitizer (coordonnées bancaires ou assimilées).");
                 return new LlmCallResult("", (int)sw.ElapsedMilliseconds, false,
                     $"HTTP {(int)response.StatusCode} : {errBody}");
             }

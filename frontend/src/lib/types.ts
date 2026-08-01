@@ -168,6 +168,7 @@ export interface DevisDto {
   statut: StatutExtraction;
   createdAt: string;
   hasPdf: boolean;
+  fichierPdfNom?: string;
   entreprise?: EntrepriseDto;
   lignes: LignePosteDto[];
 }
@@ -206,6 +207,7 @@ export interface FactureDto {
   statut: StatutExtraction;
   createdAt: string;
   hasPdf: boolean;
+  fichierPdfNom?: string;
   entreprise?: EntrepriseDto;
   lignes: LigneFactureDto[];
   piecesJointes: PieceJointeDto[];

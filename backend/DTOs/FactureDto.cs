@@ -16,6 +16,7 @@ public class FactureDto
     public string Statut { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public bool HasPdf { get; set; }
+    public string? FichierPdfNom { get; set; }
     public EntrepriseDto? Entreprise { get; set; }
     public List<LigneFactureDto> Lignes { get; set; } = [];
     public List<PieceJointeDto> PiecesJointes { get; set; } = [];

@@ -184,9 +184,9 @@ function ImportPageInner() {
         <div style={{ padding: "32px 32px 56px 40px", borderRight: "1px solid var(--nm-base-sunken)", overflowY: "auto" }}>
 
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 10, color: "var(--nm-accent)", letterSpacing: "0.18em", fontFamily: "monospace", textTransform: "uppercase", marginBottom: 8 }}>OpenRouter · PDF → PostgreSQL</div>
+            <div style={{ fontSize: 10, color: "var(--nm-accent)", letterSpacing: "0.18em", fontFamily: "monospace", textTransform: "uppercase", marginBottom: 8 }}>Import de documents</div>
             <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em" }}>Import de documents</h1>
-            <div style={{ fontSize: 13, color: "var(--nm-text-muted)", marginTop: 6 }}>Glissez vos devis et factures PDF — analyse automatique par LLM local</div>
+            <div style={{ fontSize: 13, color: "var(--nm-text-muted)", marginTop: 6 }}>Glissez vos devis et factures PDF — analyse automatique via OpenRouter</div>
           </div>
 
           {/* type selector */}
@@ -214,6 +214,9 @@ function ImportPageInner() {
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nm-text-secondary)", marginBottom: 6 }}>{dragOver ? "Relâchez pour importer" : "Glissez vos PDF ici"}</div>
               <div style={{ fontSize: 12, color: "var(--nm-text-muted)", lineHeight: 1.7 }}>Format PDF · Devis ou factures · Max. 50 Mo<br/>OpenRouter extrait les données automatiquement</div>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--nm-danger)", textAlign: "center", maxWidth: 420 }}>
+              Les PDF contenant des informations bancaires (IBAN, RIB…) peuvent être refusés par l&apos;analyse automatique. Nous travaillons à résoudre ce problème.
             </div>
             <input ref={fileInputRef} type="file" accept=".pdf" multiple style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files, defaultDocType)} />
             <button onClick={() => fileInputRef.current?.click()} style={{ padding: "9px 24px", background: "var(--nm-accent)", border: "none", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
@@ -384,12 +387,17 @@ function ImportPageInner() {
                   <path d="M9 12h6m-6 4h6M9 8h1M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="var(--nm-text-faint)" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </div>
+              {(selected?.status === "processing" || selected?.status === "error") && (
+                <div style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 600, fontFamily: "monospace", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selected.name}</div>
+              )}
               <div style={{ fontSize: 14, color: "var(--nm-text-muted)", fontWeight: 500 }}>
-                {selected?.status === "processing" ? "Analyse en cours…" : "Sélectionnez un fichier extrait"}
+                {selected?.status === "processing" ? "Analyse en cours…" : selected?.status === "error" ? "Échec de l'extraction" : "Sélectionnez un fichier extrait"}
               </div>
               <div style={{ fontSize: 12, color: "var(--nm-text-faint)", maxWidth: 200, lineHeight: 1.7 }}>
                 {selected?.status === "processing"
                   ? "Les données apparaîtront ici une fois l'extraction terminée."
+                  : selected?.status === "error"
+                  ? (selected.error ?? "L'extraction a échoué pour ce fichier.")
                   : "Cliquez sur un fichier dans la file pour voir les données extraites"}
               </div>
             </div>

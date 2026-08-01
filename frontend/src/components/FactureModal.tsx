@@ -28,6 +28,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
   const [dateEcheance, setDateEcheance] = useState(facture.dateEcheance ?? "");
   const [saving, setSaving] = useState(false);
   const [showPdf, setShowPdf] = useState(facture.hasPdf);
+  const [pdfWide, setPdfWide] = useState(false);
 
   useEffect(() => {
     if (editMode) api.entreprises.list().then(setEntreprises).catch(() => {});
@@ -113,7 +114,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
 
   return (
     <>
-      <Modal onClose={onClose} width={showPdf ? 1420 : 900} titleId="facture-modal-title">
+      <Modal onClose={onClose} width={showPdf ? (pdfWide ? 2400 : 1420) : 900} titleId="facture-modal-title">
           {/* header */}
           <div style={{ padding: "20px 28px", borderBottom: "1px solid var(--nm-border)", display: "flex", alignItems: "center", gap: 14, flexShrink: 0, background: "var(--nm-base-raised)" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -128,6 +129,15 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
             {facture.hasPdf && (
               <button onClick={() => setShowPdf((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: "var(--nm-info-bg)", color: "var(--nm-info)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
                 {showPdf ? "Masquer le PDF" : "Voir le PDF"}
+              </button>
+            )}
+            {facture.hasPdf && showPdf && (
+              <button onClick={() => setPdfWide((v) => !v)} title={pdfWide ? "Réduire l'aperçu" : "Agrandir l'aperçu"} aria-label={pdfWide ? "Réduire l'aperçu du PDF" : "Agrandir l'aperçu du PDF"} style={{ width: 32, height: 32, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {pdfWide ? (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" stroke="var(--nm-text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                ) : (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="var(--nm-text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                )}
               </button>
             )}
             <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", fontFamily: "monospace", background: statutBg(s), color: statutColor(s) }}>{statutLabel(s)}</span>
@@ -338,7 +348,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
 
           {/* pane PDF */}
           {showPdf && facture.hasPdf && (
-            <div style={{ width: 500, flexShrink: 0, borderLeft: "1px solid var(--nm-border)", background: "var(--nm-base-sunken)" }}>
+            <div style={{ width: pdfWide ? "min(1900px, 90vw)" : 500, flexShrink: 0, borderLeft: "1px solid var(--nm-border)", background: "var(--nm-base-sunken)" }}>
               <iframe src={api.factures.pdfUrl(facture.id)} title="PDF de la facture" style={{ width: "100%", height: "100%", border: "none" }} />
             </div>
           )}

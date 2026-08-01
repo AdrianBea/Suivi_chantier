@@ -145,7 +145,7 @@ export default function DevisPage() {
               </div>
               <div style={{ padding: "13px 12px 13px 0", fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.numeroDevis ?? "—"}</div>
               <div style={{ padding: "13px 12px", minWidth: 0 }}>
-                <div style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.entreprise?.nom ?? "—"}</div>
+                <div style={{ fontSize: 13, color: "var(--nm-text-secondary)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.entreprise?.nom ?? (d.statut !== "Extrait" ? d.fichierPdfNom : undefined) ?? "—"}</div>
               </div>
               <div style={{ padding: "13px 12px", fontSize: 12, color: "var(--nm-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.lot ?? "—"}</div>
               <div style={{ padding: "13px 12px", fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", whiteSpace: "nowrap" }}>{formatDate(d.dateDevis)}</div>

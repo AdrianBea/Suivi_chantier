@@ -67,6 +67,9 @@ export function PdfUploadForm({ onUpload, label = "Déposer un fichier PDF" }: P
         )}
       </div>
       {error && <p style={{ marginTop: 8, fontSize: 13, color: "var(--nm-danger)" }}>{error}</p>}
+      <p style={{ marginTop: 8, fontSize: 12, color: "var(--nm-danger)" }}>
+        Les PDF contenant des informations bancaires (IBAN, RIB…) peuvent être refusés par l&apos;analyse automatique. Nous travaillons à résoudre ce problème.
+      </p>
     </div>
   );
 }

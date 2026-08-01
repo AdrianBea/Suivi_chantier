@@ -442,6 +442,7 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         Statut = f.Statut.ToString(),
         CreatedAt = f.CreatedAt,
         HasPdf = f.FichierPdfData != null,
+        FichierPdfNom = f.FichierPdfNom,
         Entreprise = f.Entreprise == null ? null : new EntrepriseDto
         {
             Id = f.Entreprise.Id,

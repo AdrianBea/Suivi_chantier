@@ -359,6 +359,7 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         Statut = d.Statut.ToString(),
         CreatedAt = d.CreatedAt,
         HasPdf = d.FichierPdfData != null,
+        FichierPdfNom = d.FichierPdfNom,
         Entreprise = d.Entreprise == null ? null : new EntrepriseDto
         {
             Id = d.Entreprise.Id,

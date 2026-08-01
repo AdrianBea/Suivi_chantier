@@ -16,6 +16,7 @@ public class DevisDto
     public string Statut { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public bool HasPdf { get; set; }
+    public string? FichierPdfNom { get; set; }
     public EntrepriseDto? Entreprise { get; set; }
     public List<LignePosteDto> Lignes { get; set; } = [];
 }
