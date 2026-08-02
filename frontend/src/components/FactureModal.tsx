@@ -174,7 +174,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
           {/* body */}
           <div style={{ flex: 1, overflowY: "auto", padding: "clamp(18px, 4vw, 28px) clamp(16px, 4vw, 28px) 8px" }}>
             {isMobile && tab === "pdf" && facture.hasPdf ? (
-              <iframe src={api.factures.pdfUrl(facture.id)} title="PDF de la facture" style={{ width: "100%", height: "100%", minHeight: "60vh", border: "none", borderRadius: 8, background: "var(--nm-base-sunken)" }} />
+              <iframe src={api.factures.pdfUrl(facture.id)} title="PDF de la facture" sandbox="allow-same-origin" style={{ width: "100%", height: "100%", minHeight: "60vh", border: "none", borderRadius: 8, background: "var(--nm-base-sunken)" }} />
             ) : !editMode ? (
               <>
                 {/* meta grid */}
@@ -372,7 +372,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
           {/* pane PDF — desktop uniquement, en mobile c'est l'onglet « PDF » */}
           {showPdfPane && (
             <div style={{ width: pdfWide ? "min(1900px, 90vw)" : 500, flexShrink: 0, borderLeft: "1px solid var(--nm-border)", background: "var(--nm-base-sunken)" }}>
-              <iframe src={api.factures.pdfUrl(facture.id)} title="PDF de la facture" style={{ width: "100%", height: "100%", border: "none" }} />
+              <iframe src={api.factures.pdfUrl(facture.id)} title="PDF de la facture" sandbox="allow-same-origin" style={{ width: "100%", height: "100%", border: "none" }} />
             </div>
           )}
           </div>{/* fin split */}

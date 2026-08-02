@@ -74,13 +74,18 @@ public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsSt
         };
 
         var json = JsonSerializer.Serialize(requestBody);
-        var userContentPreview = userContent is string s ? Truncate(s, 2000) : "[contenu multimodal (images)]";
+        // Métadonnées seulement : les logs d'hébergement sont consultables hors du modèle
+        // d'autorisation de l'app, le contenu des documents ne doit pas y figurer.
         logger.LogInformation(
-            "OpenRouter requête → url={Url} modèle={Model} apiKeyPresente={HasKey} tailleBody={BodyBytes}o systemPrompt={SystemPromptPreview} userContent={UserContentPreview}",
+            "OpenRouter requête → url={Url} modèle={Model} apiKeyPresente={HasKey} tailleBody={BodyBytes}o",
             httpClient.BaseAddress + "chat/completions",
             settings.Model,
             !string.IsNullOrWhiteSpace(settings.ApiKey),
-            Encoding.UTF8.GetByteCount(json),
+            Encoding.UTF8.GetByteCount(json));
+        // Le contenu reste disponible pour le debug en dev, et en base via LlmExchange.
+        var userContentPreview = userContent is string s ? Truncate(s, 2000) : "[contenu multimodal (images)]";
+        logger.LogDebug(
+            "OpenRouter requête (contenu) → systemPrompt={SystemPromptPreview} userContent={UserContentPreview}",
             Truncate(systemPrompt, 500),
             userContentPreview);
 
@@ -111,8 +116,9 @@ public class OpenRouterService(IHttpClientFactory httpClientFactory, ISettingsSt
             var result = JsonSerializer.Deserialize<OpenRouterResponse>(rawBody);
             var contentText = result?.Choices?.FirstOrDefault()?.Message?.Content ?? string.Empty;
             logger.LogInformation(
-                "OpenRouter réponse ← statut={StatusCode} en {DureeMs}ms modèle={Model} headers=[{Headers}] tailleReponse={ContentLength}car contenu={ContentPreview}",
-                (int)response.StatusCode, sw.ElapsedMilliseconds, settings.Model, headers, contentText.Length, Truncate(contentText, 1000));
+                "OpenRouter réponse ← statut={StatusCode} en {DureeMs}ms modèle={Model} headers=[{Headers}] tailleReponse={ContentLength}car",
+                (int)response.StatusCode, sw.ElapsedMilliseconds, settings.Model, headers, contentText.Length);
+            logger.LogDebug("OpenRouter réponse (contenu) ← {ContentPreview}", Truncate(contentText, 1000));
 
             if (string.IsNullOrWhiteSpace(contentText))
                 logger.LogWarning("OpenRouter réponse 200 mais contenu vide, body brut={RawBody}", Truncate(rawBody, 2000));

@@ -1,9 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { FileRejection, useDropzone } from "react-dropzone";
 
 export type ExtractionMode = "Image" | "Texte";
+
+// Doit rester aligné sur UploadLimits.MaxBytes (backend) et proxyClientMaxBodySize.
+// Le refus côté client donne un message clair : au-delà, Kestrel coupe la connexion et
+// le proxy renvoie un 500 opaque au lieu du 400 explicite du contrôleur.
+export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 interface Props {
   onUpload: (file: File, mode: ExtractionMode) => Promise<void>;
@@ -16,8 +21,12 @@ export function PdfUploadForm({ onUpload, label = "Déposer un fichier PDF" }: P
   const [mode] = useState<ExtractionMode>("Texte");
 
   const onDrop = useCallback(
-    async (accepted: File[]) => {
-      if (accepted.length === 0) return;
+    async (accepted: File[], rejected: FileRejection[]) => {
+      if (accepted.length === 0) {
+        if (rejected.some((r) => r.errors.some((e) => e.code === "file-too-large")))
+          setError("Le fichier ne doit pas dépasser 25 Mo.");
+        return;
+      }
       setError(null);
       setLoading(true);
       try {
@@ -35,6 +44,7 @@ export function PdfUploadForm({ onUpload, label = "Déposer un fichier PDF" }: P
     onDrop,
     accept: { "application/pdf": [".pdf"] },
     maxFiles: 1,
+    maxSize: MAX_UPLOAD_BYTES,
     disabled: loading,
   });
 

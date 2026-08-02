@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using backend.Data;
 using backend.Models;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
@@ -15,11 +17,19 @@ namespace backend.Controllers;
 [AllowAnonymous]
 public class AuthController(AppDbContext db, IPasswordHasher<User> hasher, ILogger<AuthController> logger) : ControllerBase
 {
-    public record SignupDto(string Email, string Password, string PasswordConfirmation, DateOnly? DateDebutChantier, DateOnly? DateLivraisonPrevue);
-    public record CredentialsDto(string Email, string Password);
+    // Email borné à 255 comme en base ; le mot de passe est plafonné car PBKDF2 hache
+    // l'entrée complète — une chaîne de plusieurs Mo coûterait du CPU à chaque tentative.
+    public record SignupDto([MaxLength(255)] string Email, [MaxLength(200)] string Password, string PasswordConfirmation, DateOnly? DateDebutChantier, DateOnly? DateLivraisonPrevue);
+    public record CredentialsDto([MaxLength(255)] string Email, [MaxLength(200)] string Password);
     public record UserDto(int Id, string Email, bool IsAdmin, DateOnly? DateDebutChantier, DateOnly? DateLivraisonPrevue, string? Nom, string? Prenom, string? Adresse);
     public record UpdateProfileDto(string? Nom, string? Prenom, string? Adresse, DateOnly? DateDebutChantier, DateOnly? DateLivraisonPrevue);
 
+    // Hash bidon vérifié quand l'email est inconnu : sans lui, l'absence de PBKDF2 (~100 ms)
+    // rend le temps de réponse discriminant et permet d'énumérer les comptes existants.
+    private static readonly string DummyHash =
+        new PasswordHasher<User>().HashPassword(new User(), "mot-de-passe-inexistant");
+
+    [EnableRateLimiting("auth")]
     [HttpPost("signup")]
     public async Task<ActionResult<UserDto>> Signup(SignupDto dto)
     {
@@ -49,6 +59,7 @@ public class AuthController(AppDbContext db, IPasswordHasher<User> hasher, ILogg
         return Ok(ToDto(user));
     }
 
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(CredentialsDto dto)
     {
@@ -56,6 +67,7 @@ public class AuthController(AppDbContext db, IPasswordHasher<User> hasher, ILogg
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user is null)
         {
+            hasher.VerifyHashedPassword(new User(), DummyHash, dto.Password); // temps constant
             logger.LogWarning("Login échoué : email inconnu {Email}", email);
             return Unauthorized("Email ou mot de passe incorrect.");
         }

@@ -62,7 +62,7 @@ backend/
 │   ├── ComparaisonService.cs    # Levenshtein-based line matching + ecart computation
 │   ├── EntrepriseResolver.cs    # Reconciles/dedupes entreprises extracted from documents
 │   ├── TextSanitizer.cs         # Masks IBAN/RIB/BIC in extracted text before it's sent to the LLM
-│   ├── SettingsStore.cs         # OpenRouter settings, persisted back into backend/.env
+│   ├── SettingsStore.cs         # OpenRouter settings, read-only from IConfiguration at startup
 │   ├── CurrentUserExtensions.cs # Reads UserId from auth claims
 │   └── DotEnv.cs                # Loads backend/.env
 ├── DTOs/                        # DevisDto, FactureDto, ComparaisonDto, LlmExchangeDto
@@ -106,7 +106,7 @@ All secrets live in `backend/.env` (gitignored, `SUIVI_CHANTIER_` prefix, `__` a
 | `SUIVI_CHANTIER_OpenRouter__ApiKey` | OpenRouter API key |
 | `SUIVI_CHANTIER_OpenRouter__Model` | OpenRouter model slug (vision-capable) |
 
-- The OpenRouter model can also be changed from the **Paramètres** screen (admin only); the choice is written back into `backend/.env`. The API key is only ever set in the file.
+- The OpenRouter model and API key are **read-only at runtime**: `SettingsStore` loads them from `IConfiguration` at startup and no endpoint writes them back. The **Paramètres** screen (admin only) displays the current model and masked key, and can test the connection — changing either means editing `backend/.env` (or the Railway variables) and restarting.
 - Frontend → backend: the frontend proxies `/api/*` to the backend via `next.config.ts` rewrites (same origin, required for the auth cookie to work). In production, `BACKEND_INTERNAL_URL` must be set **at build time**.
 - `MAINTENANCE_MODE=true` (frontend env) rewrites every route except `/maintenance` to a static maintenance page (`proxy.ts`).
 

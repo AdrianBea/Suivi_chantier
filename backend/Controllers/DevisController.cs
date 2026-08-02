@@ -2,6 +2,7 @@ using backend.Data;
 using backend.DTOs;
 using backend.Models;
 using backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,21 +15,13 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
     [HttpPost("import")]
     public async Task<ActionResult<DevisDto>> Import(IFormFile file, [FromForm] string? mode)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest("Fichier manquant.");
-
-        if (!file.ContentType.Contains("pdf", StringComparison.OrdinalIgnoreCase)
-            && !file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-            return BadRequest("Seuls les fichiers PDF sont acceptés.");
-
-        if (file.Length > 50 * 1024 * 1024)
-            return BadRequest("Le fichier ne doit pas dépasser 50 Mo.");
-
         using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
+        if (file != null) await file.CopyToAsync(ms);
+        var contenu = ms.ToArray();
+        if (UploadLimits.ValidatePdf(file, contenu) is string erreur) return BadRequest(erreur);
 
         var extractionMode = Enum.TryParse<ExtractionMode>(mode, true, out var m) ? m : ExtractionMode.Texte;
-        var devis = await extractionService.CreateDevisEntryAsync(ms.ToArray(), Path.GetFileName(file.FileName), User.GetUserId());
+        var devis = await extractionService.CreateDevisEntryAsync(contenu, Path.GetFileName(file!.FileName), User.GetUserId());
         extractionService.StartDevisExtraction(devis.Id, extractionMode);
         return CreatedAtAction(nameof(GetById), new { id = devis.Id }, MapToDto(devis));
     }
@@ -80,6 +73,10 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
+        // Bornes obligatoires : pageSize non plafonné = auto-DoS, page=0 = Skip négatif -> 500.
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
         var userId = User.GetUserId();
         var query = db.Devis
             .Include(d => d.Entreprise)
@@ -187,21 +184,13 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
             .FirstOrDefaultAsync(d => d.Id == id && d.UserId == userId);
         if (devis == null) return NotFound();
 
-        if (file == null || file.Length == 0)
-            return BadRequest("Fichier manquant.");
-
-        if (!file.ContentType.Contains("pdf", StringComparison.OrdinalIgnoreCase)
-            && !file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-            return BadRequest("Seuls les fichiers PDF sont acceptés.");
-
-        if (file.Length > 50 * 1024 * 1024)
-            return BadRequest("Le fichier ne doit pas dépasser 50 Mo.");
-
         using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
+        if (file != null) await file.CopyToAsync(ms);
+        var contenu = ms.ToArray();
+        if (UploadLimits.ValidatePdf(file, contenu) is string erreur) return BadRequest(erreur);
 
-        devis.FichierPdfData = ms.ToArray();
-        devis.FichierPdfNom = Path.GetFileName(file.FileName);
+        devis.FichierPdfData = contenu;
+        devis.FichierPdfNom = Path.GetFileName(file!.FileName);
         await db.SaveChangesAsync();
         return MapToDto(devis);
     }
@@ -219,6 +208,9 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         return File(devis.FichierPdfData, "application/pdf");
     }
 
+    // Outil de debug : expose les prompts système et le corps d'erreur brut du fournisseur.
+    // Réservé aux admins, ce n'est pas une fonctionnalité utilisateur.
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet("{id}/echanges")]
     public async Task<ActionResult<List<LlmExchangeDto>>> GetEchanges(int id)
     {

@@ -84,7 +84,7 @@ export default function ParametresPage() {
   }
 
   async function handleReset() {
-    if (!confirm("Supprimer TOUS les devis, factures et entreprises ? Cette action est irréversible.")) return;
+    if (!confirm("Supprimer VOS devis, factures et entreprises ? Cette action est irréversible.")) return;
     setResetting(true); setResetResult(null);
     try {
       await api.settings.reset();
@@ -184,7 +184,7 @@ export default function ParametresPage() {
         {user?.isAdmin && (
           <div style={{ ...CARD, borderColor: "var(--nm-danger-border)", animation: "fadeUp 0.5s 0.3s ease both" }}>
             <div style={{ ...CARD_TITLE, color: "var(--nm-danger)", marginBottom: 14 }}>Zone dangereuse</div>
-            <p style={{ fontSize: 12, color: "var(--nm-text-muted)", marginBottom: 16 }}>Supprime définitivement tous les devis, factures et entreprises. La configuration est conservée.</p>
+            <p style={{ fontSize: 12, color: "var(--nm-text-muted)", marginBottom: 16 }}>Supprime définitivement vos devis, factures et entreprises. Les autres comptes et la configuration sont conservés.</p>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <button
                 onClick={handleReset}

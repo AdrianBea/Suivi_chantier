@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { FileRejection, useDropzone } from "react-dropzone";
 import { Modal } from "@/components/Modal";
 import { api } from "@/lib/api";
 import { formatDate, formatEur } from "@/lib/format";
@@ -9,6 +9,8 @@ import { statutBg, statutColor, statutLabel } from "@/lib/status";
 import { DevisDto, EntrepriseDto, LignePosteDto, TYPE_LOT_LABELS, TYPE_LOT_VALUES, TypeLot } from "@/lib/types";
 import { EchangesLlm } from "@/components/EchangesLlm";
 import { EntrepriseCombobox } from "@/components/EntrepriseCombobox";
+import { MAX_UPLOAD_BYTES } from "@/components/PdfUploadForm";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 import { useIsMobile } from "@/lib/useMediaQuery";
 
 export { statutLabel, statutBg, statutColor };
@@ -36,6 +38,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
   const [pdfWide, setPdfWide] = useState(false);
   const [showEchanges, setShowEchanges] = useState(false);
   const loadEchanges = useCallback(() => api.devis.echanges(devis.id), [devis.id]);
+  const isAdmin = useIsAdmin();
   const isMobile = useIsMobile();
   // en mobile le split horizontal ne tient pas : les 3 vues deviennent des onglets
   const [tab, setTab] = useState<"details" | "pdf" | "echanges">("details");
@@ -123,8 +126,12 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
 
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState<string | null>(null);
-  const onDropPdf = useCallback(async (accepted: File[]) => {
-    if (accepted.length === 0) return;
+  const onDropPdf = useCallback(async (accepted: File[], rejected: FileRejection[]) => {
+    if (accepted.length === 0) {
+      if (rejected.some((r) => r.errors.some((e) => e.code === "file-too-large")))
+        setAttachError("Le fichier ne doit pas dépasser 25 Mo.");
+      return;
+    }
     setAttachError(null);
     setAttaching(true);
     try {
@@ -142,6 +149,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
     onDrop: onDropPdf,
     accept: { "application/pdf": [".pdf"] },
     maxFiles: 1,
+    maxSize: MAX_UPLOAD_BYTES,
     disabled: attaching,
   });
 
@@ -156,9 +164,11 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
               <div style={{ fontFamily: "monospace", fontSize: 11, color: "var(--nm-text-muted)", marginBottom: 5 }}>{devis.numeroDevis ?? "—"}</div>
               <div id="devis-modal-title" style={{ fontSize: "clamp(15px, 4vw, 18px)", fontWeight: 700, color: "var(--nm-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{devis.entreprise?.nom ?? "—"}</div>
             </div>
-            <button className="hide-mobile" onClick={() => setShowEchanges((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: showEchanges ? "var(--nm-warning-bg)" : "var(--nm-base-sunken)", color: showEchanges ? "var(--nm-warning)" : "var(--nm-text-muted)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
-              {showEchanges ? "← Détails" : "Échanges LLM"}
-            </button>
+            {isAdmin && (
+              <button className="hide-mobile" onClick={() => setShowEchanges((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: showEchanges ? "var(--nm-warning-bg)" : "var(--nm-base-sunken)", color: showEchanges ? "var(--nm-warning)" : "var(--nm-text-muted)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+                {showEchanges ? "← Détails" : "Échanges LLM"}
+              </button>
+            )}
             {devis.hasPdf && (
               <button className="hide-mobile" onClick={() => setShowPdf((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: "var(--nm-info-bg)", color: "var(--nm-info)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
                 {showPdf ? "Masquer le PDF" : "Voir le PDF"}
@@ -184,7 +194,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
             {([
               ["details", "Détails"],
               ...(devis.hasPdf ? [["pdf", "PDF"] as const] : []),
-              ["echanges", "Échanges"],
+              ...(isAdmin ? [["echanges", "Échanges"] as const] : []),
             ] as const).map(([key, label]) => (
               <button
                 key={key}
@@ -204,8 +214,8 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
           {/* body */}
           <div style={{ flex: 1, overflowY: "auto", padding: "clamp(18px, 4vw, 28px) clamp(16px, 4vw, 28px) 8px" }}>
             {isMobile && tab === "pdf" && devis.hasPdf ? (
-              <iframe src={api.devis.pdfUrl(devis.id)} title="PDF du devis" style={{ width: "100%", height: "100%", minHeight: "60vh", border: "none", borderRadius: 8, background: "var(--nm-base-sunken)" }} />
-            ) : (isMobile ? tab === "echanges" : showEchanges) ? (
+              <iframe src={api.devis.pdfUrl(devis.id)} title="PDF du devis" sandbox="allow-same-origin" style={{ width: "100%", height: "100%", minHeight: "60vh", border: "none", borderRadius: 8, background: "var(--nm-base-sunken)" }} />
+            ) : isAdmin && (isMobile ? tab === "echanges" : showEchanges) ? (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "monospace", marginBottom: 12 }}>Échanges avec le LLM</div>
                 <EchangesLlm load={loadEchanges} />
@@ -412,7 +422,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
           {/* pane PDF — desktop uniquement, en mobile c'est l'onglet « PDF » */}
           {showPdfPane && (
             <div style={{ width: pdfWide ? "min(1900px, 90vw)" : 500, flexShrink: 0, borderLeft: "1px solid var(--nm-border)", background: "var(--nm-base-sunken)" }}>
-              <iframe src={api.devis.pdfUrl(devis.id)} title="PDF du devis" style={{ width: "100%", height: "100%", border: "none" }} />
+              <iframe src={api.devis.pdfUrl(devis.id)} title="PDF du devis" sandbox="allow-same-origin" style={{ width: "100%", height: "100%", border: "none" }} />
             </div>
           )}
           </div>{/* fin split */}

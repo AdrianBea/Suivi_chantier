@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace backend.DTOs;
 
 public class FactureDto
@@ -44,11 +46,12 @@ public class LigneFactureDto
     // EcartPrix et EcartQuantite sont calculés à la volée dans ComparaisonDto, pas stockés ici
 }
 
+// Voir DevisDto.cs pour la logique des bornes.
 public class FactureUpdateDto
 {
     public int? EntrepriseId { get; set; }
-    public string? EntrepriseNom { get; set; }
-    public string? NumeroFacture { get; set; }
+    [MaxLength(255)] public string? EntrepriseNom { get; set; }
+    [MaxLength(100)] public string? NumeroFacture { get; set; }
     public string? TypeLot { get; set; }
     public DateOnly? DateFacture { get; set; }
     public DateOnly? DateEcheance { get; set; }
@@ -57,9 +60,9 @@ public class FactureUpdateDto
 public class FactureCreateDto
 {
     public int? EntrepriseId { get; set; }
-    public string? EntrepriseNom { get; set; }
+    [MaxLength(255)] public string? EntrepriseNom { get; set; }
     public int? DevisId { get; set; }
-    public string? NumeroFacture { get; set; }
+    [MaxLength(100)] public string? NumeroFacture { get; set; }
     public string? TypeLot { get; set; }
     public DateOnly? DateFacture { get; set; }
     public DateOnly? DateEcheance { get; set; }

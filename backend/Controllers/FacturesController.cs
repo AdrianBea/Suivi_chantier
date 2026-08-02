@@ -2,6 +2,7 @@ using backend.Data;
 using backend.DTOs;
 using backend.Models;
 using backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,25 +15,17 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
     [HttpPost("import")]
     public async Task<ActionResult<FactureDto>> Import(IFormFile file, [FromQuery] int? devisId, [FromForm] string? mode)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest("Fichier manquant.");
-
-        if (!file.ContentType.Contains("pdf", StringComparison.OrdinalIgnoreCase)
-            && !file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-            return BadRequest("Seuls les fichiers PDF sont acceptés.");
-
-        if (file.Length > 50 * 1024 * 1024)
-            return BadRequest("Le fichier ne doit pas dépasser 50 Mo.");
+        using var ms = new MemoryStream();
+        if (file != null) await file.CopyToAsync(ms);
+        var contenu = ms.ToArray();
+        if (UploadLimits.ValidatePdf(file, contenu) is string erreur) return BadRequest(erreur);
 
         var userId = User.GetUserId();
         if (devisId.HasValue && !await db.Devis.AnyAsync(d => d.Id == devisId && d.UserId == userId))
             return BadRequest($"Devis {devisId} introuvable.");
 
-        using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
-
         var extractionMode = Enum.TryParse<ExtractionMode>(mode, true, out var m) ? m : ExtractionMode.Texte;
-        var facture = await extractionService.CreateFactureEntryAsync(ms.ToArray(), Path.GetFileName(file.FileName), userId, devisId);
+        var facture = await extractionService.CreateFactureEntryAsync(contenu, Path.GetFileName(file!.FileName), userId, devisId);
         extractionService.StartFactureExtraction(facture.Id, extractionMode);
         return CreatedAtAction(nameof(GetById), new { id = facture.Id }, MapToDto(facture));
     }
@@ -86,6 +79,10 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
+        // Bornes obligatoires : pageSize non plafonné = auto-DoS, page=0 = Skip négatif -> 500.
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
         var userId = User.GetUserId();
         var items = await db.Factures
             .Include(f => f.Entreprise)
@@ -325,8 +322,8 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         if (file == null || file.Length == 0)
             return BadRequest("Fichier manquant.");
 
-        if (file.Length > 50 * 1024 * 1024)
-            return BadRequest("Le fichier ne doit pas dépasser 50 Mo.");
+        if (file.Length > UploadLimits.MaxBytes)
+            return BadRequest($"Le fichier ne doit pas dépasser {UploadLimits.MaxLabel}.");
 
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!AllowedPieceJointeTypes.TryGetValue(extension, out var expectedContentType)
@@ -410,6 +407,9 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         CreatedAt = p.CreatedAt
     };
 
+    // Outil de debug : expose les prompts système et le corps d'erreur brut du fournisseur.
+    // Réservé aux admins, ce n'est pas une fonctionnalité utilisateur.
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet("{id}/echanges")]
     public async Task<ActionResult<List<LlmExchangeDto>>> GetEchanges(int id)
     {

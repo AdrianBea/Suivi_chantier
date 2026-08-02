@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { FileRejection, useDropzone } from "react-dropzone";
+import { MAX_UPLOAD_BYTES } from "@/components/PdfUploadForm";
 
 interface Props {
   onUpload: (file: File, libelle?: string) => Promise<void>;
@@ -16,8 +17,12 @@ export function PieceJointeUploadForm({ onUpload }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
-    async (accepted: File[]) => {
-      if (accepted.length === 0) return;
+    async (accepted: File[], rejected: FileRejection[]) => {
+      if (accepted.length === 0) {
+        if (rejected.some((r) => r.errors.some((e) => e.code === "file-too-large")))
+          setError("Le fichier ne doit pas dépasser 25 Mo.");
+        return;
+      }
       setError(null);
       setLoading(true);
       try {
@@ -36,6 +41,7 @@ export function PieceJointeUploadForm({ onUpload }: Props) {
     onDrop,
     accept: { "application/pdf": [".pdf"], "image/jpeg": [".jpg", ".jpeg"], "image/png": [".png"] },
     maxFiles: 1,
+    maxSize: MAX_UPLOAD_BYTES,
     disabled: loading,
   });
 

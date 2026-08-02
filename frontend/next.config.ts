@@ -14,8 +14,27 @@ if (process.env.NODE_ENV === "production" && !process.env.BACKEND_INTERNAL_URL) 
 }
 
 const nextConfig: NextConfig = {
+  // proxy.ts fait bufferiser le body par Next : au-delà de cette limite le corps est
+  // TRONQUÉ SANS ERREUR (le backend reçoit un PDF corrompu). Doit rester alignée sur
+  // UploadLimits.MaxBytes et MaxRequestBodySize côté backend.
+  experimental: { proxyClientMaxBodySize: "25mb" },
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` }];
+  },
+  // Pas de CSP : l'app utilise massivement le style inline, une CSP stricte casserait l'UI.
+  // nosniff est le garde-fou principal ici — les PDF et pièces jointes sont servis inline
+  // depuis la même origine, un fichier stocké ne doit pas pouvoir être réinterprété.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+    ];
   },
 };
 
