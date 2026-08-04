@@ -51,7 +51,7 @@ const FAQ = [
   },
   {
     q: "L'extraction échoue systématiquement, sur tous les documents",
-    a: <>L&apos;application délègue la lecture des PDF à un service d&apos;IA externe (OpenRouter). S&apos;il est injoignable, aucune extraction ne peut aboutir : tous les documents passent en <B>Erreur</B> quelques secondes après l&apos;import. Réessayez plus tard ; si le problème persiste, contactez la personne qui administre l&apos;application.</>,
+    a: <>L&apos;application confie la lecture des PDF à un service d&apos;analyse externe. S&apos;il est indisponible, aucune extraction ne peut aboutir : tous les documents passent en <B>Erreur</B> quelques secondes après l&apos;import. Réessayez plus tard ; si le problème persiste, contactez la personne qui administre l&apos;application.</>,
   },
   {
     q: "Les montants extraits sont faux",

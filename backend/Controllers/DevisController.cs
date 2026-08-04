@@ -50,6 +50,9 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
             typeLot = parsed;
         }
 
+        if (await NumeroDejaPrisAsync(userId, entrepriseId, dto.NumeroDevis, null))
+            return Conflict($"Un devis n° {dto.NumeroDevis} existe déjà pour cette entreprise.");
+
         var devis = new Devis
         {
             UserId = userId,
@@ -140,6 +143,9 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
                 return BadRequest($"Type de lot '{dto.TypeLot}' invalide.");
             typeLot = parsed;
         }
+
+        if (await NumeroDejaPrisAsync(userId, entrepriseId, dto.NumeroDevis, devis.Id))
+            return Conflict($"Un devis n° {dto.NumeroDevis} existe déjà pour cette entreprise.");
 
         devis.NumeroDevis = dto.NumeroDevis;
         devis.Lot = dto.Lot;
@@ -334,6 +340,15 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         devis.TvaMontant = devis.TotalHt * taux / 100;
         devis.TotalTtc = devis.TotalHt + devis.TvaMontant;
     }
+
+    // L'index unique (UserId, EntrepriseId, NumeroDevis) ferait sinon remonter une 500 SQL.
+    private Task<bool> NumeroDejaPrisAsync(int userId, int? entrepriseId, string? numero, int? exclureId)
+        => string.IsNullOrWhiteSpace(numero)
+            ? Task.FromResult(false)
+            : db.Devis.AnyAsync(d => d.UserId == userId
+                && d.EntrepriseId == entrepriseId
+                && d.NumeroDevis == numero
+                && d.Id != exclureId);
 
     private static DevisDto MapToDto(Devis d, bool includeLignes = true) => new()
     {

@@ -131,7 +131,7 @@ export default function Dashboard() {
             {user?.isAdmin && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border)", borderRadius: 6, padding: "6px 12px" }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", background: lmOk ? "var(--nm-success)" : lmOk === false ? "var(--nm-danger)" : "var(--nm-text-muted)", boxShadow: lmOk ? "0 0 6px 1px color-mix(in srgb, var(--nm-success) 55%, transparent)" : "none" }} />
-                <span style={{ fontSize: 12, color: "var(--nm-text-muted)" }}>OpenRouter {lmOk === null ? "…" : lmOk ? "connecté" : "déconnecté"}</span>
+                <span style={{ fontSize: 12, color: "var(--nm-text-muted)" }}>Analyse automatique {lmOk === null ? "…" : lmOk ? "disponible" : "indisponible"}</span>
               </div>
             )}
             <div style={{ background: "var(--nm-base-raised)", border: "1px solid var(--nm-border)", borderRadius: 8, padding: "8px 14px", textAlign: "right" }}>

@@ -36,7 +36,7 @@ export default function ImportDevisPage() {
         }
       } catch {
         clearInterval(interval);
-        setPhase({ kind: "error", message: "Erreur lors de la vérification du statut. Le serveur est-il accessible ?" });
+        setPhase({ kind: "error", message: "Impossible de vérifier l'avancement de l'analyse. Vérifiez votre connexion et réessayez." });
       }
     }, 3000);
 
@@ -63,7 +63,7 @@ export default function ImportDevisPage() {
           </div>
 
           <p style={{ marginTop: 16, fontSize: 12, color: "var(--nm-text-faint)" }}>
-            L&apos;analyse par le modèle IA (OpenRouter) peut prendre 1 à 3 minutes selon la taille du document.
+            L&apos;analyse automatique peut prendre 1 à 3 minutes selon la taille du document.
           </p>
         </>
       )}
@@ -74,7 +74,7 @@ export default function ImportDevisPage() {
             <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
           </svg>
-          <p style={{ fontSize: 15, fontWeight: 500, color: "var(--nm-text-secondary)" }}>Analyse en cours par le modèle IA…</p>
+          <p style={{ fontSize: 15, fontWeight: 500, color: "var(--nm-text-secondary)" }}>Analyse du document en cours…</p>
           <p style={{ fontSize: 13, color: "var(--nm-text-faint)" }}>Cela peut prendre 1 à 3 minutes. Ne fermez pas cette page.</p>
         </div>
       )}

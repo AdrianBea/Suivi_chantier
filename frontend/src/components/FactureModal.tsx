@@ -238,7 +238,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
               <>
                 <div style={{ background: "var(--nm-success-bg)", border: "1px solid var(--nm-success)", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--nm-success)", display: "flex", alignItems: "center", gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="var(--nm-success)" strokeWidth="2" strokeLinecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="var(--nm-success)" strokeWidth="2" strokeLinecap="round"/></svg>
-                  Mode édition — les modifications seront enregistrées en base PostgreSQL
+                  Mode édition — vos modifications seront enregistrées
                 </div>
                 <div className="stack-mobile" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
                   <div>
@@ -439,7 +439,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
       {/* toast */}
       <div style={{ position: "fixed", bottom: isMobile ? 80 : 24, left: "50%", transform: `translateX(-50%) translateY(${showToast ? "0px" : "10px"})`, zIndex: 100, background: "var(--nm-success-bg)", border: "1px solid var(--nm-success)", borderRadius: 9, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10, opacity: showToast ? 1 : 0, pointerEvents: "none", transition: "opacity 0.3s ease, transform 0.3s ease", whiteSpace: "nowrap", maxWidth: "calc(100vw - 32px)" }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="var(--nm-success)" strokeWidth="2.5" strokeLinecap="round"/></svg>
-        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--nm-success)" }}>Modifications enregistrées en base</span>
+        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--nm-success)" }}>Modifications enregistrées</span>
       </div>
     </>
   );

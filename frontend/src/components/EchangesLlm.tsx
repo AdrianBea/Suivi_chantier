@@ -35,8 +35,8 @@ export function EchangesLlm({ load }: { load: () => Promise<LlmExchangeDto[]> })
               <span style={{ padding: "3px 9px", borderRadius: 12, fontSize: 10, fontWeight: 700, fontFamily: "monospace", background: e.succes ? "var(--nm-success-bg)" : "var(--nm-danger-bg)", color: e.succes ? "var(--nm-success)" : "var(--nm-danger)" }}>
                 {e.succes ? "OK" : "ERREUR"}
               </span>
-              <span style={{ fontSize: 12, color: "var(--nm-text-secondary)", fontWeight: 600 }}>Batch {e.batch}</span>
-              <span style={{ fontSize: 11, color: "var(--nm-text-muted)", fontFamily: "monospace" }}>{e.nbImages} img · {e.dureeMs} ms · {e.modele}</span>
+              <span style={{ fontSize: 12, color: "var(--nm-text-secondary)", fontWeight: 600 }}>Lot {e.batch}</span>
+              <span style={{ fontSize: 11, color: "var(--nm-text-muted)", fontFamily: "monospace" }}>{e.nbImages} page(s) · {(e.dureeMs / 1000).toFixed(1)} s · {e.modele}</span>
               <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--nm-text-faint)", fontFamily: "monospace" }}>{new Date(e.createdAt).toLocaleString("fr-FR")}</span>
               <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ transform: isOpen ? "rotate(180deg)" : undefined, transition: "transform 0.15s" }}>
                 <path d="M2 4l4 4 4-4" stroke="var(--nm-text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -47,10 +47,10 @@ export function EchangesLlm({ load }: { load: () => Promise<LlmExchangeDto[]> })
                 {e.erreur && (
                   <Bloc titre="Erreur" couleur="var(--nm-danger)">{e.erreur}</Bloc>
                 )}
-                <Bloc titre="Prompt utilisateur">{e.userPrompt}</Bloc>
-                <Bloc titre="Réponse brute du LLM">{e.reponseBrute || "(vide)"}</Bloc>
+                <Bloc titre="Contenu envoyé pour analyse">{e.userPrompt}</Bloc>
+                <Bloc titre="Résultat de l'analyse">{e.reponseBrute || "(vide)"}</Bloc>
                 <details>
-                  <summary style={{ fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", cursor: "pointer" }}>System prompt</summary>
+                  <summary style={{ fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", cursor: "pointer" }}>Consignes d&apos;analyse</summary>
                   <pre style={preStyle}>{e.systemPrompt}</pre>
                 </details>
               </div>

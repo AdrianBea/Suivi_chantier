@@ -81,7 +81,7 @@ export function PieceJointeUploadForm({ onUpload }: Props) {
         ) : (
           <div>
             <p style={{ color: "var(--nm-text-muted)", fontSize: 12 }}>Déposer un fichier (PDF, JPG, PNG)</p>
-            <p style={{ fontSize: 11, color: "var(--nm-text-faint)", marginTop: 4 }}>Glissez-déposez ou cliquez pour sélectionner — 50 Mo max</p>
+            <p style={{ fontSize: 11, color: "var(--nm-text-faint)", marginTop: 4 }}>Glissez-déposez ou cliquez pour sélectionner — 25 Mo max</p>
           </div>
         )}
       </div>

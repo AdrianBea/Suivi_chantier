@@ -53,7 +53,7 @@ export default function ParametresPage() {
             .catch(() => {});
         }
       })
-      .catch((e) => setLoadError(e instanceof Error ? e.message : "Impossible de joindre le backend"))
+      .catch((e) => setLoadError(e instanceof Error ? e.message : "Impossible de charger vos paramètres"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -88,7 +88,7 @@ export default function ParametresPage() {
     setResetting(true); setResetResult(null);
     try {
       await api.settings.reset();
-      setResetResult({ success: true, message: "Base réinitialisée." });
+      setResetResult({ success: true, message: "Vos données ont été supprimées." });
     } catch (e) {
       setResetResult({ success: false, message: e instanceof Error ? e.message : "Erreur inconnue" });
     } finally { setResetting(false); }
@@ -159,12 +159,12 @@ export default function ParametresPage() {
         {/* IA / OpenRouter — admin uniquement */}
         {user?.isAdmin && (
           <div style={{ ...CARD, marginBottom: SECTION_GAP, animation: "fadeUp 0.5s 0.25s ease both" }}>
-            <div style={CARD_TITLE}>IA · OpenRouter</div>
+            <div style={CARD_TITLE}>Analyse automatique des documents</div>
 
             <div style={{ marginBottom: FIELD_GAP }}>
-              <label style={LABEL}>Modèle</label>
+              <label style={LABEL}>Modèle d&apos;analyse</label>
               <div style={FIELD}>{model || "—"}</div>
-              <p style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: LABEL_GAP }}>Configuré dans <code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>backend/.env</code> (<code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>SUIVI_CHANTIER_OpenRouter__Model</code>).</p>
+              <p style={{ fontSize: 11, color: "var(--nm-text-muted)", marginTop: LABEL_GAP }}>Ce réglage est défini à l&apos;installation de l&apos;application et ne peut pas être modifié ici.</p>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -191,7 +191,7 @@ export default function ParametresPage() {
                 disabled={resetting}
                 style={{ ...BTN, background: resetting ? "var(--nm-danger-border)" : "var(--nm-danger-bg)", border: "1px solid var(--nm-danger)", color: "var(--nm-text-on-accent)", cursor: resetting ? "not-allowed" : "pointer" }}
               >
-                {resetting ? "Suppression…" : "RAZ toute la base"}
+                {resetting ? "Suppression…" : "Tout supprimer"}
               </button>
               {resetResult && (
                 <span style={{ ...RESULT_TEXT, color: resetResult.success ? "var(--nm-success)" : "var(--nm-danger)" }}>
@@ -215,7 +215,7 @@ export default function ParametresPage() {
     <div style={{ background: "var(--nm-base)", minHeight: "100vh", padding: "40px", color: "var(--nm-text-primary)" }}>
       <Link href="/" style={{ fontSize: 13, color: "var(--nm-accent)", textDecoration: "none" }}>← Accueil</Link>
       <div style={{ marginTop: 20, padding: "14px 18px", background: "var(--nm-danger-bg)", border: "1px solid var(--nm-danger-border)", borderRadius: 8, fontSize: 13, color: "var(--nm-danger)" }}>
-        Impossible de joindre le backend : {loadError}. Vérifiez que le serveur est démarré (<code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>dotnet run</code> dans <code style={{ fontFamily: "var(--font-jetbrains-mono)" }}>backend/</code>).
+        {loadError} Le service est momentanément indisponible, merci de réessayer dans quelques instants.
       </div>
     </div>
   );

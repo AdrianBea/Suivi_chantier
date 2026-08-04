@@ -166,7 +166,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
             </div>
             {isAdmin && (
               <button className="hide-mobile" onClick={() => setShowEchanges((v) => !v)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: "inherit", background: showEchanges ? "var(--nm-warning-bg)" : "var(--nm-base-sunken)", color: showEchanges ? "var(--nm-warning)" : "var(--nm-text-muted)", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
-                {showEchanges ? "← Détails" : "Échanges LLM"}
+                {showEchanges ? "← Détails" : "Journal d'analyse"}
               </button>
             )}
             {devis.hasPdf && (
@@ -217,7 +217,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
               <iframe src={api.devis.pdfUrl(devis.id)} title="PDF du devis" sandbox="allow-same-origin" style={{ width: "100%", height: "100%", minHeight: "60vh", border: "none", borderRadius: 8, background: "var(--nm-base-sunken)" }} />
             ) : isAdmin && (isMobile ? tab === "echanges" : showEchanges) ? (
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "monospace", marginBottom: 12 }}>Échanges avec le LLM</div>
+                <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nm-text-muted)", fontFamily: "monospace", marginBottom: 12 }}>Journal d&apos;analyse du document</div>
                 <EchangesLlm load={loadEchanges} />
               </div>
             ) : !editMode ? (
@@ -283,7 +283,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
               <>
                 <div style={{ background: "var(--nm-success-bg)", border: "1px solid var(--nm-success)", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--nm-success)", display: "flex", alignItems: "center", gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="var(--nm-success)" strokeWidth="2" strokeLinecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="var(--nm-success)" strokeWidth="2" strokeLinecap="round"/></svg>
-                  Mode édition — les modifications seront enregistrées en base PostgreSQL
+                  Mode édition — vos modifications seront enregistrées
                 </div>
                 {!devis.hasPdf && (
                   <div style={{ marginBottom: 20 }}>
@@ -489,7 +489,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
       {/* toast */}
       <div style={{ position: "fixed", bottom: isMobile ? 80 : 24, left: "50%", transform: `translateX(-50%) translateY(${showToast ? "0px" : "10px"})`, zIndex: 100, background: "var(--nm-success-bg)", border: "1px solid var(--nm-success)", borderRadius: 9, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10, opacity: showToast ? 1 : 0, pointerEvents: "none", transition: "opacity 0.3s ease, transform 0.3s ease", whiteSpace: "nowrap", maxWidth: "calc(100vw - 32px)" }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="var(--nm-success)" strokeWidth="2.5" strokeLinecap="round"/></svg>
-        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--nm-success)" }}>Modifications enregistrées en base</span>
+        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--nm-success)" }}>Modifications enregistrées</span>
       </div>
     </>
   );

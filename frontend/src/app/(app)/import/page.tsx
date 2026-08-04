@@ -186,7 +186,7 @@ function ImportPageInner() {
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 10, color: "var(--nm-accent)", letterSpacing: "0.18em", fontFamily: "monospace", textTransform: "uppercase", marginBottom: 8 }}>Import de documents</div>
             <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em" }}>Import de documents</h1>
-            <div style={{ fontSize: 13, color: "var(--nm-text-muted)", marginTop: 6 }}>Glissez vos devis et factures PDF — analyse automatique via OpenRouter</div>
+            <div style={{ fontSize: 13, color: "var(--nm-text-muted)", marginTop: 6 }}>Glissez vos devis et factures PDF — analyse automatique</div>
           </div>
 
           {/* type selector */}
@@ -213,7 +213,7 @@ function ImportPageInner() {
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nm-text-secondary)", marginBottom: 6 }}>{dragOver ? "Relâchez pour importer" : "Glissez vos PDF ici"}</div>
-              <div style={{ fontSize: 12, color: "var(--nm-text-muted)", lineHeight: 1.7 }}>Format PDF · Devis ou factures · Max. 50 Mo<br/>OpenRouter extrait les données automatiquement</div>
+              <div style={{ fontSize: 12, color: "var(--nm-text-muted)", lineHeight: 1.7 }}>Format PDF · Devis ou factures · Max. 25 Mo<br/>Les données sont extraites automatiquement</div>
             </div>
             <div style={{ fontSize: 11, color: "var(--nm-danger)", textAlign: "center", maxWidth: 420 }}>
               Les PDF contenant des informations bancaires (IBAN, RIB…) peuvent être refusés par l&apos;analyse automatique. Nous travaillons à résoudre ce problème.
@@ -290,8 +290,8 @@ function ImportPageInner() {
                   <button
                     onClick={(ev) => { ev.stopPropagation(); setConfirmReject(entry); }}
                     disabled={rejecting === entry.id}
-                    title="Supprimer de la base"
-                    aria-label="Supprimer de la base"
+                    title="Supprimer ce document"
+                    aria-label="Supprimer ce document"
                     style={{ width: 24, height: 24, background: "transparent", border: "1px solid var(--nm-danger-border)", borderRadius: 5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6" stroke="var(--nm-danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -354,7 +354,7 @@ function ImportPageInner() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {selected.status === "extracted" ? (
                   <>
-                    <div style={{ fontSize: 11, color: "var(--nm-text-muted)", marginBottom: 4 }}>Document enregistré en base — consultez-le pour valider les lignes.</div>
+                    <div style={{ fontSize: 11, color: "var(--nm-text-muted)", marginBottom: 4 }}>Document enregistré — consultez-le pour valider les lignes.</div>
                     <Link
                       href={selected.docType === "DEVIS" ? `/devis/${selected.devisId}` : "/factures"}
                       style={{ display: "block", width: "100%", padding: 12, background: "var(--nm-accent)", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, textAlign: "center", textDecoration: "none" }}
@@ -376,7 +376,7 @@ function ImportPageInner() {
                   disabled={rejecting === selected.id}
                   style={{ width: "100%", padding: 10, background: "transparent", border: "1px solid var(--nm-danger-border)", borderRadius: 8, color: "var(--nm-danger)", fontSize: 13, cursor: rejecting === selected.id ? "not-allowed" : "pointer", opacity: rejecting === selected.id ? 0.6 : 1, fontFamily: "inherit", marginTop: 4 }}
                 >
-                  {rejecting === selected.id ? "Suppression…" : "Refuser — infos incorrectes (supprime en base)"}
+                  {rejecting === selected.id ? "Suppression…" : "Refuser — infos incorrectes (supprime le document)"}
                 </button>
               </div>
             </div>

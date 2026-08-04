@@ -246,7 +246,12 @@ public class ExtractionService(
 
             if (lastDevisNode != null)
             {
-                devis.NumeroDevis = ParseString(lastDevisNode["numero"]);
+                devis.NumeroDevis = await FreeOrNullAsync(
+                    ParseString(lastDevisNode["numero"]),
+                    n => db.Devis.AnyAsync(d => d.UserId == devis.UserId
+                        && d.EntrepriseId == devis.EntrepriseId
+                        && d.NumeroDevis == n
+                        && d.Id != devis.Id));
                 devis.Lot = ParseString(lastDevisNode["lot"]);
                 devis.TypeLot = ParseTypeLot(ParseString(lastDevisNode["type_lot"]));
                 devis.DateDevis = ParseDate(ParseString(lastDevisNode["date_devis"]));
@@ -422,7 +427,12 @@ public class ExtractionService(
 
             if (lastFactureNode != null)
             {
-                facture.NumeroFacture = ParseString(lastFactureNode["numero"]);
+                facture.NumeroFacture = await FreeOrNullAsync(
+                    ParseString(lastFactureNode["numero"]),
+                    n => db.Factures.AnyAsync(f => f.UserId == facture.UserId
+                        && f.EntrepriseId == facture.EntrepriseId
+                        && f.NumeroFacture == n
+                        && f.Id != facture.Id));
                 facture.TypeLot = ParseTypeLot(ParseString(lastFactureNode["type_lot"]));
                 facture.DateFacture = ParseDate(ParseString(lastFactureNode["date_facture"]));
                 facture.DateEcheance = ParseDate(ParseString(lastFactureNode["date_echeance"]));
@@ -468,6 +478,13 @@ public class ExtractionService(
             await db.SaveChangesAsync();
         }
     }
+
+    // Le numero vient du LLM : il peut deja exister (reimport du meme PDF, numero mal lu).
+    // L'index unique ferait planter tout le SaveChanges et perdrait l'extraction entiere,
+    // donc on prefere garder le document sans numero.
+    // ponytail: on ne desambigue pas (pas de suffixe "-2"), l'utilisateur corrige a la main si besoin.
+    private static async Task<string?> FreeOrNullAsync(string? numero, Func<string, Task<bool>> dejaPris)
+        => string.IsNullOrWhiteSpace(numero) || await dejaPris(numero) ? null : numero;
 
     private static JsonNode? ParseJson(string raw)
     {

@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { API_BASE, api } from "@/lib/api";
 import { buttonStyle, cardStyle, inputStyle } from "../form-styles";
 
 export default function LoginPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    // Réveille le backend et la base Railway (plan gratuit en veille après inactivité).
+    fetch(`${API_BASE}/api/auth/ping`).catch(() => {});
+  }, []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -57,6 +57,9 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
             typeLot = parsed;
         }
 
+        if (await NumeroDejaPrisAsync(userId, entrepriseId, dto.NumeroFacture, null))
+            return Conflict($"Une facture n° {dto.NumeroFacture} existe déjà pour cette entreprise.");
+
         var facture = new Facture
         {
             UserId = userId,
@@ -145,6 +148,9 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
             }
             facture.EntrepriseId = newEntrepriseId;
         }
+
+        if (await NumeroDejaPrisAsync(userId, facture.EntrepriseId, dto.NumeroFacture, facture.Id))
+            return Conflict($"Une facture n° {dto.NumeroFacture} existe déjà pour cette entreprise.");
 
         facture.NumeroFacture = dto.NumeroFacture;
         facture.TypeLot = typeLot;
@@ -425,6 +431,15 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
             .ToListAsync();
         return Ok(echanges);
     }
+
+    // L'index unique (UserId, EntrepriseId, NumeroFacture) ferait sinon remonter une 500 SQL.
+    private Task<bool> NumeroDejaPrisAsync(int userId, int? entrepriseId, string? numero, int? exclureId)
+        => string.IsNullOrWhiteSpace(numero)
+            ? Task.FromResult(false)
+            : db.Factures.AnyAsync(f => f.UserId == userId
+                && f.EntrepriseId == entrepriseId
+                && f.NumeroFacture == numero
+                && f.Id != exclureId);
 
     private static FactureDto MapToDto(Facture f, bool includeLignes = true) => new()
     {
