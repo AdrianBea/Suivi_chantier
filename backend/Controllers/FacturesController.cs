@@ -65,7 +65,7 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
             UserId = userId,
             EntrepriseId = entrepriseId,
             DevisId = dto.DevisId,
-            NumeroFacture = dto.NumeroFacture,
+            NumeroFacture = Normaliser(dto.NumeroFacture),
             TypeLot = typeLot,
             DateFacture = dto.DateFacture,
             DateEcheance = dto.DateEcheance,
@@ -152,7 +152,7 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         if (await NumeroDejaPrisAsync(userId, facture.EntrepriseId, dto.NumeroFacture, facture.Id))
             return Conflict($"Une facture n° {dto.NumeroFacture} existe déjà pour cette entreprise.");
 
-        facture.NumeroFacture = dto.NumeroFacture;
+        facture.NumeroFacture = Normaliser(dto.NumeroFacture);
         facture.TypeLot = typeLot;
         facture.DateFacture = dto.DateFacture;
         facture.DateEcheance = dto.DateEcheance;
@@ -432,14 +432,22 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         return Ok(echanges);
     }
 
+    // Un numero vide/blanc n'est pas null cote SQL : l'index unique partiel l'indexerait quand
+    // meme et le 2e document remonterait une 500. On ramene donc a null avant toute comparaison.
+    private static string? Normaliser(string? numero)
+        => string.IsNullOrWhiteSpace(numero) ? null : numero.Trim();
+
     // L'index unique (UserId, EntrepriseId, NumeroFacture) ferait sinon remonter une 500 SQL.
     private Task<bool> NumeroDejaPrisAsync(int userId, int? entrepriseId, string? numero, int? exclureId)
-        => string.IsNullOrWhiteSpace(numero)
+    {
+        var normalise = Normaliser(numero);
+        return normalise == null
             ? Task.FromResult(false)
             : db.Factures.AnyAsync(f => f.UserId == userId
                 && f.EntrepriseId == entrepriseId
-                && f.NumeroFacture == numero
+                && f.NumeroFacture == normalise
                 && f.Id != exclureId);
+    }
 
     private static FactureDto MapToDto(Facture f, bool includeLignes = true) => new()
     {

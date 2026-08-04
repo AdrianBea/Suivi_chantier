@@ -92,7 +92,9 @@ public class AuthController(AppDbContext db, IPasswordHasher<User> hasher, ILogg
     }
 
     // Ping pour réveiller le backend et la base Railway (plan gratuit = veille après inactivité).
+    // Anonyme et touche la base : sans limite, une boucle épuiserait le pool de connexions.
     [HttpGet("ping")]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult> Ping()
     {
         await db.Database.CanConnectAsync();

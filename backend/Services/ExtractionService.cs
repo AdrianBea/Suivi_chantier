@@ -295,6 +295,9 @@ public class ExtractionService(
         catch (Exception ex)
         {
             logger.LogError(ex, "Extraction failed for devis {DevisId}", devisId);
+            // Si c'est l'index unique qui a fait echouer le save, regraver le meme numero
+            // relancerait la meme violation et le devis resterait bloque en EnAttente.
+            devis.NumeroDevis = null;
             devis.Statut = StatutExtraction.Erreur;
             await db.SaveChangesAsync();
         }
@@ -474,6 +477,9 @@ public class ExtractionService(
         catch (Exception ex)
         {
             logger.LogError(ex, "Extraction failed for facture {FactureId}", factureId);
+            // Si c'est l'index unique qui a fait echouer le save, regraver le meme numero
+            // relancerait la meme violation et la facture resterait bloquee en EnAttente.
+            facture.NumeroFacture = null;
             facture.Statut = StatutExtraction.Erreur;
             await db.SaveChangesAsync();
         }

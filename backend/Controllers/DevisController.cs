@@ -57,7 +57,7 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         {
             UserId = userId,
             EntrepriseId = entrepriseId,
-            NumeroDevis = dto.NumeroDevis,
+            NumeroDevis = Normaliser(dto.NumeroDevis),
             Lot = dto.Lot,
             TypeLot = typeLot,
             DateDevis = dto.DateDevis,
@@ -147,7 +147,7 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         if (await NumeroDejaPrisAsync(userId, entrepriseId, dto.NumeroDevis, devis.Id))
             return Conflict($"Un devis n° {dto.NumeroDevis} existe déjà pour cette entreprise.");
 
-        devis.NumeroDevis = dto.NumeroDevis;
+        devis.NumeroDevis = Normaliser(dto.NumeroDevis);
         devis.Lot = dto.Lot;
         devis.TypeLot = typeLot;
         devis.DateDevis = dto.DateDevis;
@@ -341,14 +341,22 @@ public class DevisController(AppDbContext db, IExtractionService extractionServi
         devis.TotalTtc = devis.TotalHt + devis.TvaMontant;
     }
 
+    // Un numero vide/blanc n'est pas null cote SQL : l'index unique partiel l'indexerait quand
+    // meme et le 2e document remonterait une 500. On ramene donc a null avant toute comparaison.
+    private static string? Normaliser(string? numero)
+        => string.IsNullOrWhiteSpace(numero) ? null : numero.Trim();
+
     // L'index unique (UserId, EntrepriseId, NumeroDevis) ferait sinon remonter une 500 SQL.
     private Task<bool> NumeroDejaPrisAsync(int userId, int? entrepriseId, string? numero, int? exclureId)
-        => string.IsNullOrWhiteSpace(numero)
+    {
+        var normalise = Normaliser(numero);
+        return normalise == null
             ? Task.FromResult(false)
             : db.Devis.AnyAsync(d => d.UserId == userId
                 && d.EntrepriseId == entrepriseId
-                && d.NumeroDevis == numero
+                && d.NumeroDevis == normalise
                 && d.Id != exclureId);
+    }
 
     private static DevisDto MapToDto(Devis d, bool includeLignes = true) => new()
     {
