@@ -1,4 +1,4 @@
-import { ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, LignePosteUpsertDto, LlmExchangeDto, OpenRouterSettingsDto, PieceJointeDto, TestResultDto, UpdateProfileDto, UserDto } from "./types";
+import { AdminUserDto, ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, HealthDto, LignePosteUpsertDto, LlmExchangeDto, LlmExchangeListDto, LlmStatsDto, OpenRouterSettingsDto, PieceJointeDto, TestResultDto, UpdateProfileDto, UserDto } from "./types";
 
 // Same-origin: rewrites in next.config.ts proxy /api/* to the backend so the
 // ASP.NET auth cookie (scoped to this origin) travels with every request.
@@ -223,6 +223,26 @@ export const api = {
         body: JSON.stringify(dto),
       }),
     delete: (id: number) => request<void>(`/api/entreprises/${id}`, { method: "DELETE" }),
+  },
+  admin: {
+    users: () => request<AdminUserDto[]>("/api/admin/users"),
+    setAdmin: (id: number, isAdmin: boolean) =>
+      request<void>(`/api/admin/users/${id}/admin`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isAdmin }),
+      }),
+    deleteUser: (id: number) => request<void>(`/api/admin/users/${id}`, { method: "DELETE" }),
+    llmStats: () => request<LlmStatsDto>("/api/admin/llm/stats"),
+    llmExchanges: (params?: { succes?: boolean; modele?: string; page?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.succes !== undefined) qs.set("succes", String(params.succes));
+      if (params?.modele) qs.set("modele", params.modele);
+      if (params?.page) qs.set("page", String(params.page));
+      return request<LlmExchangeListDto[]>(`/api/admin/llm/exchanges?${qs}`);
+    },
+    llmExchange: (id: number) => request<LlmExchangeDto>(`/api/admin/llm/exchanges/${id}`),
+    health: () => request<HealthDto>("/api/admin/health"),
   },
   settings: {
     get: () => request<OpenRouterSettingsDto>("/api/settings"),

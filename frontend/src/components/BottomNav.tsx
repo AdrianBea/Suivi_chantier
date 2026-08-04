@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 
 // même logique d'activation que Nav.tsx : exact pour "/", préfixe sinon
 function isActive(pathname: string, href: string) {
@@ -22,13 +23,16 @@ const TABS = [
 const MORE = [
   { href: "/entreprises", label: "Entreprises" },
   { href: "/parametres", label: "Paramètres" },
+  { href: "/admin", label: "Admin", adminOnly: true },
   { href: "/aide", label: "Aide" },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const isAdmin = useIsAdmin();
   const [showMore, setShowMore] = useState(false);
+  const moreItems = MORE.filter((m) => !m.adminOnly || isAdmin);
 
   // neutralise le scroll de fond quand la feuille est ouverte
   useEffect(() => {
@@ -38,7 +42,7 @@ export default function BottomNav() {
     return () => { document.body.style.overflow = prev; };
   }, [showMore]);
 
-  const moreActive = MORE.some((m) => isActive(pathname, m.href));
+  const moreActive = moreItems.some((m) => isActive(pathname, m.href));
 
   async function handleLogout() {
     await api.auth.logout();
@@ -105,7 +109,7 @@ export default function BottomNav() {
             }}
           >
             <div style={{ width: 38, height: 4, borderRadius: 2, background: "var(--nm-border-strong)", margin: "0 auto 16px" }} />
-            {MORE.map(({ href, label }) => (
+            {moreItems.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}

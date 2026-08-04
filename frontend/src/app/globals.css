@@ -678,6 +678,13 @@ dialog {
     border-bottom: none !important;
   }
 
+  /* Colonnes secondaires à retirer de la carte : une table large ferait sinon
+     une carte de 8 lignes. `.hide-mobile` ne suffit pas ici — le sélecteur du
+     tableau (0,2,0) l'emporte sur (0,1,0) à !important égal. */
+  .table-to-cards > .tc-row > .tc-hide-mobile {
+    display: none !important;
+  }
+
   /* le conteneur ne doit plus scroller horizontalement en mode cartes */
   .table-to-cards-wrap {
     overflow-x: visible !important;

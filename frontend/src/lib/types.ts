@@ -17,6 +17,65 @@ export interface UpdateProfileDto {
   dateLivraisonPrevue?: string | null;
 }
 
+// --- Administration (miroirs de backend/DTOs/AdminDto.cs) ---
+
+export type AdminUserDto = {
+  id: number;
+  email: string;
+  nom: string | null;
+  prenom: string | null;
+  isAdmin: boolean;
+  createdAt: string;
+  nbDevis: number;
+  nbFactures: number;
+  nbEntreprises: number;
+  octetsStockes: number;
+};
+
+/** Échange LLM allégé : sans les prompts, trop lourds pour une liste. */
+export type LlmExchangeListDto = {
+  id: number;
+  typeDocument: "Devis" | "Facture";
+  documentId: number;
+  batch: number;
+  modele: string;
+  nbImages: number;
+  dureeMs: number;
+  succes: boolean;
+  erreur: string | null;
+  createdAt: string;
+};
+
+export type ModeleStatDto = {
+  modele: string;
+  total: number;
+  echecs: number;
+  dureeMoyenneMs: number;
+};
+
+export type JourStatDto = { jour: string; total: number; echecs: number };
+
+export type LlmStatsDto = {
+  total: number;
+  echecs: number;
+  tauxSucces: number;
+  dureeMoyenneMs: number;
+  dureeP95Ms: number;
+  parModele: ModeleStatDto[];
+  septDerniersJours: JourStatDto[];
+};
+
+export type HealthDto = {
+  dbConnectee: boolean;
+  version: string;
+  uptimeHeures: number;
+  nbUtilisateurs: number;
+  tailleBaseOctets: number;
+  octetsPdfStockes: number;
+  devisEnErreur: number;
+  facturesEnErreur: number;
+};
+
 export type StatutExtraction = "EnAttente" | "Extrait" | "Erreur";
 export type TypeFacture = "Facture" | "Acompte" | "Solde";
 

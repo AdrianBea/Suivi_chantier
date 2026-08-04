@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 
 const ITEMS = [
   { href: "/", label: "Tableau de bord" },
@@ -10,14 +11,16 @@ const ITEMS = [
   { href: "/entreprises", label: "Entreprises" },
   { href: "/import", label: "Import" },
   { href: "/parametres", label: "Paramètres" },
+  { href: "/admin", label: "Admin", adminOnly: true },
   { href: "/aide", label: "Aide" },
 ];
 
 export default function Nav() {
   const pathname = usePathname();
+  const isAdmin = useIsAdmin();
   return (
     <nav aria-label="Principal" className="hide-mobile" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-      {ITEMS.map(({ href, label }) => {
+      {ITEMS.filter((i) => !i.adminOnly || isAdmin).map(({ href, label }) => {
         const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
           <Link
