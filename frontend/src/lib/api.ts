@@ -1,50 +1,26 @@
 import { AdminUserDto, ComparaisonDto, DevisCreateDto, DevisDto, DevisUpdateDto, EntrepriseDto, EntrepriseUpsertDto, FactureCreateDto, FactureDto, FactureUpdateDto, HealthDto, LignePosteUpsertDto, LlmExchangeDto, LlmExchangeListDto, LlmStatsDto, OpenRouterSettingsDto, PieceJointeDto, TestResultDto, UpdateProfileDto, UserDto } from "./types";
+import { fetchAvecRetry, humanizeError, isHumanMessage, type Retry } from "./errors";
 
 // Same-origin: rewrites in next.config.ts proxy /api/* to the backend so the
 // ASP.NET auth cookie (scoped to this origin) travels with every request.
 export const API_BASE = "";
 
-const FALLBACK_MESSAGES: Record<number, string> = {
-  400: "La demande n'a pas pu être traitée.",
-  403: "Action non autorisée.",
-  404: "Élément introuvable.",
-  409: "Cette action entre en conflit avec des données existantes.",
-  413: "Le fichier envoyé est trop volumineux.",
-  429: "Trop de requêtes, merci de réessayer dans un instant.",
-};
-
-// Les controllers renvoient un texte brut lisible ; ASP.NET peut aussi renvoyer un
-// ProblemDetails JSON (ex. erreurs de model binding) ou un body vide (NotFound()) :
-// on ramène tout ça à un message humain unique pour tous les appelants de l'API.
-async function humanizeError(res: Response): Promise<string> {
-  const text = await res.text();
-  if (text) {
-    try {
-      const problem = JSON.parse(text);
-      if (typeof problem === "object" && problem !== null) {
-        if (typeof problem.title === "string") return problem.title;
-        if (typeof problem.detail === "string") return problem.detail;
-      }
-    } catch {
-      return text;
-    }
-  }
-  return FALLBACK_MESSAGES[res.status] ?? "Une erreur inattendue est survenue. Merci de réessayer.";
-}
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}${path}`, { ...init, credentials: "include" });
-  } catch {
-    throw new Error("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
-  }
+async function request<T>(path: string, init?: RequestInit, retry?: Retry): Promise<T> {
+  const res = await fetchAvecRetry(
+    () =>
+      fetch(`${API_BASE}${path}`, {
+        ...init,
+        credentials: "include",
+        signal: retry ? AbortSignal.timeout(retry.timeoutMs) : init?.signal,
+      }),
+    retry,
+  );
   if (res.status === 401 && typeof window !== "undefined") {
     // Le cookie peut être expiré côté serveur tout en restant présent (HttpOnly) côté navigateur :
     // sans le SignOut, proxy.ts (hasSession = simple présence du cookie) renvoie /login -> / en boucle.
     if (path === "/api/auth/login") {
-      const text = await res.text();
-      throw new Error(text || "Email ou mot de passe incorrect.");
+      const text = await res.text().catch(() => "");
+      throw new Error(isHumanMessage(text) ? text.trim() : "Email ou mot de passe incorrect.");
     }
     if (path !== "/api/auth/logout") {
       await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
@@ -79,12 +55,17 @@ export const api = {
           dateLivraisonPrevue,
         }),
       }),
-    login: (email: string, password: string) =>
-      request<UserDto>("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      }),
+    // Login idempotent : le rejouer après un timeout ne crée rien côté serveur.
+    login: (email: string, password: string, onRetry?: (tentative: number) => void) =>
+      request<UserDto>(
+        "/api/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        },
+        { timeoutMs: 20_000, retries: 2, onRetry },
+      ),
     logout: () => request<void>("/api/auth/logout", { method: "POST" }),
     me: () => request<UserDto>("/api/auth/me"),
     updateMe: (dto: UpdateProfileDto) =>

@@ -9,6 +9,9 @@ backend/.env
 # Uploaded user documents (devis/factures PDFs)
 backend/uploads/
 
+# Rapports d'audit de sécurité (détaillent des vulnérabilités non corrigées)
+audit-securite-*.html
+
 # IDE
 .vs/
 .vscode/
