@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { formatDate, formatEur, formatTaille } from "@/lib/format";
 import { EntrepriseDto, FactureDto, LigneFactureDto, PieceJointeDto, TYPE_LOT_LABELS, TYPE_LOT_VALUES, TypeLot } from "@/lib/types";
 import { EntrepriseCombobox } from "@/components/EntrepriseCombobox";
+import { formatMontant, TVA_DEFAUT, useCalculTva } from "@/lib/montants";
 import { PieceJointeUploadForm } from "@/components/PieceJointeUploadForm";
 import { useIsMobile } from "@/lib/useMediaQuery";
 
@@ -27,6 +28,8 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
   const [typeLot, setTypeLot] = useState<TypeLot | "">(facture.typeLot ?? "");
   const [dateFacture, setDateFacture] = useState(facture.dateFacture ?? "");
   const [dateEcheance, setDateEcheance] = useState(facture.dateEcheance ?? "");
+  // calcul en croix HT / TVA / TTC de l'entête, identique à celui de la modale de ligne
+  const totaux = useCalculTva(facture);
   const [saving, setSaving] = useState(false);
   const [showPdf, setShowPdf] = useState(facture.hasPdf);
   const [pdfWide, setPdfWide] = useState(false);
@@ -45,6 +48,8 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
     setTypeLot(facture.typeLot ?? "");
     setDateFacture(facture.dateFacture ?? "");
     setDateEcheance(facture.dateEcheance ?? "");
+    totaux.reset(facture);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [facture]);
 
   function applyUpdate(updated: FactureDto) {
@@ -61,6 +66,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
         typeLot: typeLot || undefined,
         dateFacture: dateFacture || undefined,
         dateEcheance: dateEcheance || undefined,
+        ...totaux.values,
       });
       applyUpdate(updated);
       setEditMode(false);
@@ -208,7 +214,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
                   <div style={{ background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border)", borderTop: "2px solid var(--nm-accent)", borderRadius: 8, padding: "14px 16px" }}>
                     <div style={{ fontSize: 9, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Montant TTC</div>
                     <div style={{ fontSize: 16, color: "var(--nm-text-primary)", fontWeight: 700, fontFamily: "monospace" }}>{formatEur(facture.totalTtc)}</div>
-                    <div style={{ fontSize: 9, color: "var(--nm-text-faint)", fontFamily: "monospace", marginTop: 3 }}>TVA {facture.tvaTaux ?? 20}% incl.</div>
+                    <div style={{ fontSize: 9, color: "var(--nm-text-faint)", fontFamily: "monospace", marginTop: 3 }}>TVA {facture.tvaTaux ?? TVA_DEFAUT}% incl.</div>
                   </div>
                 </div>
 
@@ -272,6 +278,21 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
                   <div>
                     <label htmlFor="facture-edit-echeance" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Échéance</label>
                     <input id="facture-edit-echeance" type="date" value={dateEcheance} onChange={(e) => setDateEcheance(e.target.value)} style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
+                  </div>
+                  <div>
+                    <label htmlFor="facture-edit-tva" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>TVA (%)</label>
+                    <input id="facture-edit-tva" value={totaux.tvaTaux} onChange={(e) => totaux.handleTvaChange(e.target.value)} inputMode="decimal" placeholder={String(TVA_DEFAUT)} style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
+                  </div>
+                  <div>
+                    <label htmlFor="facture-edit-totalht" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Total HT</label>
+                    <input id="facture-edit-totalht" value={totaux.totalHt} onChange={(e) => totaux.handleHtChange(e.target.value)} inputMode="decimal" style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
+                  </div>
+                  <div>
+                    <label htmlFor="facture-edit-totalttc" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Total TTC</label>
+                    <input id="facture-edit-totalttc" value={totaux.totalTtc} onChange={(e) => totaux.handleTtcChange(e.target.value)} inputMode="decimal" style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
+                  </div>
+                  <div style={{ gridColumn: "1 / -1", fontSize: 11, color: "var(--nm-text-faint)" }}>
+                    Montant de TVA : {totaux.montantTva != null ? `${formatMontant(totaux.montantTva)} €` : "—"} — la saisie d&apos;un des trois champs recalcule les deux autres.
                   </div>
                 </div>
                 <div style={{ marginBottom: 8 }}>
@@ -399,6 +420,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
         <LigneForm
           ligne={ligneEnCours === "new" ? null : ligneEnCours}
           nextOrdre={facture.lignes.length + 1}
+          tvaTaux={totaux.taux}
           onCancel={() => setLigneEnCours(null)}
           onSave={handleSaveLigne}
         />

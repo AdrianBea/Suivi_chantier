@@ -10,6 +10,7 @@ import { DevisDto, EntrepriseDto, LignePosteDto, TYPE_LOT_LABELS, TYPE_LOT_VALUE
 import { EchangesLlm } from "@/components/EchangesLlm";
 import { EntrepriseCombobox } from "@/components/EntrepriseCombobox";
 import { MAX_UPLOAD_BYTES } from "@/components/PdfUploadForm";
+import { formatMontant, htDepuisTtc, parseMontant, ttcDepuisHt, TVA_DEFAUT, useCalculTva } from "@/lib/montants";
 import { useIsAdmin } from "@/lib/useIsAdmin";
 import { useIsMobile } from "@/lib/useMediaQuery";
 
@@ -29,9 +30,8 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
   const [lot, setLot] = useState(devis.lot ?? "");
   const [typeLot, setTypeLot] = useState<TypeLot | "">(devis.typeLot ?? "");
   const [dateDevis, setDateDevis] = useState(devis.dateDevis ?? "");
-  const [tvaTaux, setTvaTaux] = useState(devis.tvaTaux?.toString() ?? "");
-  const [totalHt, setTotalHt] = useState(devis.totalHt?.toString() ?? "");
-  const [totalTtc, setTotalTtc] = useState(devis.totalTtc?.toString() ?? "");
+  // calcul en croix HT / TVA / TTC de l'entête, identique à celui de la modale de ligne
+  const totaux = useCalculTva(devis);
   const [entreprise, setEntreprise] = useState<{ entrepriseId?: number; entrepriseNom?: string }>({ entrepriseId: devis.entreprise?.id });
   const [saving, setSaving] = useState(false);
   const [showPdf, setShowPdf] = useState(devis.hasPdf);
@@ -53,10 +53,9 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
     setLot(devis.lot ?? "");
     setTypeLot(devis.typeLot ?? "");
     setDateDevis(devis.dateDevis ?? "");
-    setTvaTaux(devis.tvaTaux?.toString() ?? "");
-    setTotalHt(devis.totalHt?.toString() ?? "");
-    setTotalTtc(devis.totalTtc?.toString() ?? "");
+    totaux.reset(devis);
     setEntreprise({ entrepriseId: devis.entreprise?.id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devis]);
 
   function applyUpdate(updated: DevisDto) {
@@ -73,9 +72,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
         typeLot: typeLot || undefined,
         dateDevis: dateDevis || undefined,
         ...entreprise,
-        tvaTaux: tvaTaux ? Number(tvaTaux) : undefined,
-        totalHt: totalHt ? Number(totalHt) : undefined,
-        totalTtc: totalTtc ? Number(totalTtc) : undefined,
+        ...totaux.values,
       });
       applyUpdate(updated);
       setEditMode(false);
@@ -117,8 +114,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
     try {
       const updated = await api.devis.recalculer(devis.id);
       applyUpdate(updated);
-      setTotalHt(updated.totalHt?.toString() ?? "");
-      setTotalTtc(updated.totalTtc?.toString() ?? "");
+      totaux.reset(updated);
     } finally {
       setRecalculating(false);
     }
@@ -253,7 +249,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                   <div style={{ background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border)", borderTop: "2px solid var(--nm-accent)", borderRadius: 8, padding: "14px 16px" }}>
                     <div style={{ fontSize: 9, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Montant TTC</div>
                     <div style={{ fontSize: 16, color: "var(--nm-text-primary)", fontWeight: 700, fontFamily: "monospace" }}>{formatEur(devis.totalTtc)}</div>
-                    <div style={{ fontSize: 9, color: "var(--nm-text-faint)", fontFamily: "monospace", marginTop: 3 }}>TVA {devis.tvaTaux ?? 20}% incl.</div>
+                    <div style={{ fontSize: 9, color: "var(--nm-text-faint)", fontFamily: "monospace", marginTop: 3 }}>TVA {devis.tvaTaux ?? TVA_DEFAUT}% incl.</div>
                   </div>
                 </div>
 
@@ -326,15 +322,18 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                   </div>
                   <div>
                     <label htmlFor="devis-edit-tva" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>TVA (%)</label>
-                    <input id="devis-edit-tva" value={tvaTaux} onChange={(e) => setTvaTaux(e.target.value)} inputMode="decimal" placeholder="20" style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
+                    <input id="devis-edit-tva" value={totaux.tvaTaux} onChange={(e) => totaux.handleTvaChange(e.target.value)} inputMode="decimal" placeholder={String(TVA_DEFAUT)} style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
                   </div>
                   <div>
                     <label htmlFor="devis-edit-totalht" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Total HT</label>
-                    <input id="devis-edit-totalht" value={totalHt} onChange={(e) => setTotalHt(e.target.value)} inputMode="decimal" style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
+                    <input id="devis-edit-totalht" value={totaux.totalHt} onChange={(e) => totaux.handleHtChange(e.target.value)} inputMode="decimal" style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
                   </div>
                   <div>
                     <label htmlFor="devis-edit-totalttc" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Total TTC</label>
-                    <input id="devis-edit-totalttc" value={totalTtc} onChange={(e) => setTotalTtc(e.target.value)} inputMode="decimal" style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
+                    <input id="devis-edit-totalttc" value={totaux.totalTtc} onChange={(e) => totaux.handleTtcChange(e.target.value)} inputMode="decimal" style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}/>
+                  </div>
+                  <div style={{ gridColumn: "1 / -1", fontSize: 11, color: "var(--nm-text-faint)" }}>
+                    Montant de TVA : {totaux.montantTva != null ? `${formatMontant(totaux.montantTva)} €` : "—"} — la saisie d&apos;un des trois champs recalcule les deux autres.
                   </div>
                 </div>
                 <div style={{ marginBottom: 8 }}>
@@ -373,7 +372,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
                         <div data-label="Unité" style={{ padding: "11px 8px", fontSize: 12, color: "var(--nm-text-muted)" }}>{l.unite ?? "—"}</div>
                         <div data-label="P.U. HT" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{formatEur(l.prixUnitaire)}</div>
                         <div data-label="Total HT" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-secondary)", textAlign: "right", fontWeight: 500 }}>{formatEur(l.totalLigne)}</div>
-                        <div data-label="Total TTC" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{l.totalLigne != null ? formatEur(l.totalLigne * (1 + (devis.tvaTaux ?? 20) / 100)) : "—"}</div>
+                        <div data-label="Total TTC" style={{ padding: "11px 8px", fontSize: 12, fontFamily: "monospace", color: "var(--nm-text-muted)", textAlign: "right" }}>{l.totalLigne != null ? formatEur(ttcDepuisHt(l.totalLigne, totaux.taux)) : "—"}</div>
                         <div data-label="" style={{ padding: "9px 8px", display: "flex", justifyContent: "flex-end", gap: 6 }}>
                           <button onClick={() => setLigneEnCours(l)} title="Modifier" aria-label="Modifier la ligne" className="touch-target" style={{ width: 24, height: 24, background: "var(--nm-base-raised)", border: "1px solid var(--nm-border-strong)", borderRadius: 5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="var(--nm-text-tertiary)" strokeWidth="2" strokeLinecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="var(--nm-text-tertiary)" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -465,6 +464,7 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
         <LigneForm
           ligne={ligneEnCours === "new" ? null : ligneEnCours}
           nextOrdre={devis.lignes.length + 1}
+          tvaTaux={totaux.taux}
           onCancel={() => setLigneEnCours(null)}
           onSave={handleSaveLigne}
         />
@@ -495,37 +495,33 @@ export function DevisModal({ devis: initialDevis, onClose, onDeleted, onUpdated 
   );
 }
 
-export function LigneForm({ ligne, nextOrdre, onCancel, onSave }: {
+export function LigneForm({ ligne, nextOrdre, tvaTaux, onCancel, onSave }: {
   ligne: LignePosteDto | null;
   nextOrdre: number;
+  /** taux de TVA du document — le TTC de la ligne suit l'entête (défaut 20 %) */
+  tvaTaux?: number | null;
   onCancel: () => void;
   onSave: (dto: { ordre: number; description: string; quantite?: number; unite?: string; prixUnitaire?: number; totalLigne?: number }) => Promise<void>;
 }) {
+  const taux = tvaTaux ?? TVA_DEFAUT;
   const [description, setDescription] = useState(ligne?.description ?? "");
   const [quantite, setQuantite] = useState(ligne?.quantite?.toString() ?? "");
   const [unite, setUnite] = useState(ligne?.unite ?? "");
   const [prixUnitaire, setPrixUnitaire] = useState(ligne?.prixUnitaire?.toString() ?? "");
   const [totalLigne, setTotalLigne] = useState(ligne?.totalLigne?.toString() ?? "");
-  const [totalTtc, setTotalTtc] = useState(ligne?.totalLigne != null ? (ligne.totalLigne * 1.2).toFixed(2) : "");
+  const [totalTtc, setTotalTtc] = useState(ligne?.totalLigne != null ? formatMontant(ttcDepuisHt(ligne.totalLigne, taux)) : "");
   const [saving, setSaving] = useState(false);
 
-  const TVA_TAUX = 0.2;
-  // tolère "1 200,50", "1200.5", espaces insécables et fines (copier-coller depuis un PDF/Excel FR)
-  const num = (v: string) => {
-    if (!v) return null;
-    const cleaned = v.replace(/[\s  ]/g, "").replace(",", ".");
-    const n = Number(cleaned);
-    return cleaned && !isNaN(n) ? n : null;
-  };
-  const fmt = (n: number) => n.toFixed(2);
+  const num = parseMontant;
+  const fmt = formatMontant;
 
-  // P.U. fixe, Qté pilote : Total HT = Qté × P.U., TTC = HT × 1.2
+  // P.U. fixe, Qté pilote : Total HT = Qté × P.U., puis TTC = HT + TVA
   function recalcFromQtePu(q: string, pu: string) {
     const nq = num(q), npu = num(pu);
     if (nq != null && npu != null) {
       const ht = nq * npu;
       setTotalLigne(fmt(ht));
-      setTotalTtc(fmt(ht * (1 + TVA_TAUX)));
+      setTotalTtc(fmt(ttcDepuisHt(ht, taux)));
     }
   }
 
@@ -543,7 +539,7 @@ export function LigneForm({ ligne, nextOrdre, onCancel, onSave }: {
     setTotalLigne(v);
     const ht = num(v), nq = num(quantite);
     if (ht != null) {
-      setTotalTtc(fmt(ht * (1 + TVA_TAUX)));
+      setTotalTtc(fmt(ttcDepuisHt(ht, taux)));
       if (nq) setPrixUnitaire(fmt(ht / nq));
     }
   }
@@ -552,7 +548,7 @@ export function LigneForm({ ligne, nextOrdre, onCancel, onSave }: {
     setTotalTtc(v);
     const ttc = num(v), nq = num(quantite);
     if (ttc != null) {
-      const ht = ttc / (1 + TVA_TAUX);
+      const ht = htDepuisTtc(ttc, taux);
       setTotalLigne(fmt(ht));
       if (nq) setPrixUnitaire(fmt(ht / nq));
     }

@@ -62,10 +62,12 @@ export default function FacturesPage() {
     return true;
   });
 
-  const totalHT = factures.reduce((s, f) => s + (f.totalHt ?? 0), 0);
-  const totalTTC = factures.reduce((s, f) => s + (f.totalTtc ?? 0), 0);
-  const extraitCount = factures.filter((f) => f.statut === "Extrait").length;
-  const enAttenteCount = factures.filter((f) => f.statut === "EnAttente").length;
+  // les stats suivent les filtres : elles décrivent toujours ce que la table affiche
+  const filtresActifs = filterStatut !== "all" || filterTypeLot !== "all" || q !== "";
+  const totalHT = filtered.reduce((s, f) => s + (f.totalHt ?? 0), 0);
+  const totalTTC = filtered.reduce((s, f) => s + (f.totalTtc ?? 0), 0);
+  const extraitCount = filtered.filter((f) => f.statut === "Extrait").length;
+  const enAttenteCount = filtered.filter((f) => f.statut === "EnAttente").length;
 
   const pills = [
     { key: "all", label: "Tous" },
@@ -79,7 +81,9 @@ export default function FacturesPage() {
         <ListPageHeader
           eyebrow="Documents contractuels"
           title="Factures"
-          subtitle={`${factures.length} factures · ${formatEur(totalHT)} HT · ${formatEur(totalTTC)} TTC au total`}
+          subtitle={filtresActifs
+            ? `${filtered.length} factures sur ${factures.length} · ${formatEur(totalHT)} HT · ${formatEur(totalTTC)} TTC sur la sélection`
+            : `${factures.length} factures · ${formatEur(totalHT)} HT · ${formatEur(totalTTC)} TTC au total`}
           actions={<>
             <button onClick={() => setCreating(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "transparent", border: "1px solid var(--nm-border-strong)", borderRadius: 8, color: "var(--nm-text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="var(--nm-text-secondary)" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -96,11 +100,11 @@ export default function FacturesPage() {
         {loading ? <LoadState /> : <>
 
         <StatGrid stats={[
-          { label: "Total", value: String(factures.length), color: "var(--nm-text-primary)" },
-          { label: "Extraites", value: String(extraitCount), color: "var(--nm-success)" },
-          { label: "En attente", value: String(enAttenteCount), color: "var(--nm-warning)" },
-          { label: "Montant HT", value: formatEur(totalHT), color: "var(--nm-accent)", small: true },
-          { label: "Montant TTC", value: formatEur(totalTTC), color: "var(--nm-accent)", small: true },
+          { label: "Total", value: String(filtered.length), color: "var(--nm-text-primary)", hint: filtresActifs ? `sur ${factures.length} au total` : undefined },
+          { label: "Extraites", value: String(extraitCount), color: "var(--nm-success)", hint: filtresActifs ? "filtré" : undefined },
+          { label: "En attente", value: String(enAttenteCount), color: "var(--nm-warning)", hint: filtresActifs ? "filtré" : undefined },
+          { label: "Montant HT", value: formatEur(totalHT), color: "var(--nm-accent)", small: true, hint: filtresActifs ? "filtré" : undefined },
+          { label: "Montant TTC", value: formatEur(totalTTC), color: "var(--nm-accent)", small: true, hint: filtresActifs ? "filtré" : undefined },
         ]} />
 
         {/* filter bar */}
