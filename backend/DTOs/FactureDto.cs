@@ -58,6 +58,11 @@ public class FactureUpdateDto
     public decimal? TvaTaux { get; set; }
     public decimal? TotalHt { get; set; }
     public decimal? TotalTtc { get; set; }
+    /// <summary>
+    /// Statut d'extraction. Modifiable uniquement tant que la facture est en Erreur :
+    /// c'est la porte de sortie manuelle d'une extraction ratée, pas un champ libre.
+    /// </summary>
+    public string? Statut { get; set; }
 }
 
 public class FactureCreateDto
