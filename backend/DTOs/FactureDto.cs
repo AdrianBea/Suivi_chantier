@@ -55,6 +55,9 @@ public class FactureUpdateDto
     public string? TypeLot { get; set; }
     public DateOnly? DateFacture { get; set; }
     public DateOnly? DateEcheance { get; set; }
+    public decimal? TvaTaux { get; set; }
+    public decimal? TotalHt { get; set; }
+    public decimal? TotalTtc { get; set; }
 }
 
 public class FactureCreateDto

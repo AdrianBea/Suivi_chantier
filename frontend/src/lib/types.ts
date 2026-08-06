@@ -181,6 +181,9 @@ export interface FactureUpdateDto {
   typeLot?: TypeLot;
   dateFacture?: string;
   dateEcheance?: string;
+  tvaTaux?: number;
+  totalHt?: number;
+  totalTtc?: number;
 }
 
 export interface FactureCreateDto {

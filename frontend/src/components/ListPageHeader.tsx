@@ -22,13 +22,15 @@ export function ListPageHeader({ eyebrow, title, subtitle, actions }: {
   );
 }
 
-export function StatGrid({ stats }: { stats: { label: string; value: string; color: string; small?: boolean }[] }) {
+export function StatGrid({ stats }: { stats: { label: string; value: string; color: string; small?: boolean; hint?: string }[] }) {
   return (
     <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 22 }}>
-      {stats.map(({ label, value, color, small }, i) => (
+      {stats.map(({ label, value, color, small, hint }, i) => (
         <div key={label} className="nm-card nm-row-in stat-tile" style={{ padding: "16px 18px", animationDelay: `${i * 40}ms` }}>
           <div className="stat-label" style={{ fontSize: 10, color: "var(--nm-text-muted)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>{label}</div>
           <div className={`stat-value${small ? " stat-value-sm" : ""}`} style={{ fontSize: small ? 18 : 26, fontWeight: 700, fontFamily: "monospace", color, letterSpacing: small ? "-0.02em" : undefined }}>{value}</div>
+          {/* affiché quand les chiffres portent sur une sous-partie filtrée de la liste */}
+          {hint && <div style={{ fontSize: 10, color: "var(--nm-text-faint)", fontFamily: "monospace", marginTop: 5 }}>{hint}</div>}
         </div>
       ))}
     </div>

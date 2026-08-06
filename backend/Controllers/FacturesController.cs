@@ -156,6 +156,11 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         facture.TypeLot = typeLot;
         facture.DateFacture = dto.DateFacture;
         facture.DateEcheance = dto.DateEcheance;
+        facture.TvaTaux = dto.TvaTaux;
+        // les totaux sont saisis à la main (plus de recalcul depuis les lignes) ; TVA montant = TTC - HT
+        facture.TotalHt = dto.TotalHt;
+        facture.TotalTtc = dto.TotalTtc;
+        facture.TvaMontant = dto.TotalTtc - dto.TotalHt;
         await db.SaveChangesAsync();
 
         // recharge l'entreprise si elle a changé
