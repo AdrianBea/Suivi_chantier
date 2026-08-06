@@ -6,7 +6,8 @@ import { LigneForm, statutBg, statutColor, statutLabel } from "@/components/Devi
 import { Modal } from "@/components/Modal";
 import { api } from "@/lib/api";
 import { formatDate, formatEur, formatTaille } from "@/lib/format";
-import { EntrepriseDto, FactureDto, LigneFactureDto, PieceJointeDto, TYPE_LOT_LABELS, TYPE_LOT_VALUES, TypeLot } from "@/lib/types";
+import { STATUT_VALUES } from "@/lib/status";
+import { EntrepriseDto, FactureDto, LigneFactureDto, PieceJointeDto, StatutExtraction, TYPE_LOT_LABELS, TYPE_LOT_VALUES, TypeLot } from "@/lib/types";
 import { EntrepriseCombobox } from "@/components/EntrepriseCombobox";
 import { formatMontant, TVA_DEFAUT, useCalculTva } from "@/lib/montants";
 import { PieceJointeUploadForm } from "@/components/PieceJointeUploadForm";
@@ -28,6 +29,9 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
   const [typeLot, setTypeLot] = useState<TypeLot | "">(facture.typeLot ?? "");
   const [dateFacture, setDateFacture] = useState(facture.dateFacture ?? "");
   const [dateEcheance, setDateEcheance] = useState(facture.dateEcheance ?? "");
+  const [statut, setStatut] = useState<StatutExtraction>(facture.statut);
+  // le statut ne se corrige à la main que pour rattraper une extraction ratée
+  const statutModifiable = facture.statut === "Erreur";
   // calcul en croix HT / TVA / TTC de l'entête, identique à celui de la modale de ligne
   const totaux = useCalculTva(facture);
   const [saving, setSaving] = useState(false);
@@ -48,6 +52,7 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
     setTypeLot(facture.typeLot ?? "");
     setDateFacture(facture.dateFacture ?? "");
     setDateEcheance(facture.dateEcheance ?? "");
+    setStatut(facture.statut);
     totaux.reset(facture);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [facture]);
@@ -66,6 +71,8 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
         typeLot: typeLot || undefined,
         dateFacture: dateFacture || undefined,
         dateEcheance: dateEcheance || undefined,
+        // hors erreur, le backend refuse tout changement : on n'envoie même pas le champ
+        statut: statutModifiable ? statut : undefined,
         ...totaux.values,
       });
       applyUpdate(updated);
@@ -270,6 +277,24 @@ export function FactureModal({ facture: initialFacture, onClose, onDeleted, onUp
                         <option key={t} value={t}>{TYPE_LOT_LABELS[t]}</option>
                       ))}
                     </select>
+                  </div>
+                  <div>
+                    <label htmlFor="facture-edit-statut" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Statut</label>
+                    {statutModifiable ? (
+                      <>
+                        <select id="facture-edit-statut" value={statut} onChange={(e) => setStatut(e.target.value as StatutExtraction)} style={{ width: "100%", background: "var(--nm-base-sunken)", border: "1px solid var(--nm-border-strong)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-secondary)", fontFamily: "inherit" }}>
+                          {STATUT_VALUES.map((v) => (
+                            <option key={v} value={v}>{statutLabel(v)}</option>
+                          ))}
+                        </select>
+                        <div style={{ fontSize: 10, color: "var(--nm-text-faint)", marginTop: 5 }}>Corrigez le statut une fois les données de la facture reprises à la main</div>
+                      </>
+                    ) : (
+                      <>
+                        <div id="facture-edit-statut" style={{ width: "100%", background: "var(--nm-base)", border: "1px solid var(--nm-border)", borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "var(--nm-text-muted)" }}>{statutLabel(facture.statut)}</div>
+                        <div style={{ fontSize: 10, color: "var(--nm-text-faint)", marginTop: 5 }}>Le statut n&apos;est modifiable que si la facture est en erreur</div>
+                      </>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="facture-edit-datefacture" style={{ display: "block", fontSize: 10, color: "var(--nm-text-faint)", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "monospace", marginBottom: 6 }}>Date facture</label>

@@ -6,6 +6,8 @@ export const STATUT_CONFIG: Record<StatutExtraction, { label: string; bg: string
   Erreur: { label: "ERREUR", bg: "var(--nm-danger-bg)", color: "var(--nm-danger)" },
 };
 
+export const STATUT_VALUES = ["EnAttente", "Extrait", "Erreur"] as const satisfies readonly StatutExtraction[];
+
 export function statutLabel(s: StatutExtraction) {
   return STATUT_CONFIG[s]?.label ?? STATUT_CONFIG.Erreur.label;
 }

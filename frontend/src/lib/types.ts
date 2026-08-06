@@ -184,6 +184,8 @@ export interface FactureUpdateDto {
   tvaTaux?: number;
   totalHt?: number;
   totalTtc?: number;
+  /** Accepté par le backend uniquement si la facture est actuellement en Erreur. */
+  statut?: StatutExtraction;
 }
 
 export interface FactureCreateDto {

@@ -130,6 +130,18 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
             typeLot = parsed;
         }
 
+        StatutExtraction? nouveauStatut = null;
+        if (!string.IsNullOrEmpty(dto.Statut))
+        {
+            if (!Enum.TryParse<StatutExtraction>(dto.Statut, out var parsedStatut))
+                return BadRequest($"Statut '{dto.Statut}' invalide.");
+            // Le statut n'est modifiable que pour rattraper une extraction en erreur ;
+            // sur une facture saine, il reste piloté par le pipeline d'extraction.
+            if (parsedStatut != facture.Statut && facture.Statut != StatutExtraction.Erreur)
+                return BadRequest("Le statut n'est modifiable que lorsque la facture est en erreur.");
+            nouveauStatut = parsedStatut;
+        }
+
         var wantsEntrepriseChange = dto.EntrepriseId.HasValue || !string.IsNullOrWhiteSpace(dto.EntrepriseNom);
         if (wantsEntrepriseChange)
         {
@@ -161,6 +173,7 @@ public class FacturesController(AppDbContext db, IExtractionService extractionSe
         facture.TotalHt = dto.TotalHt;
         facture.TotalTtc = dto.TotalTtc;
         facture.TvaMontant = dto.TotalTtc - dto.TotalHt;
+        if (nouveauStatut.HasValue) facture.Statut = nouveauStatut.Value;
         await db.SaveChangesAsync();
 
         // recharge l'entreprise si elle a changé
